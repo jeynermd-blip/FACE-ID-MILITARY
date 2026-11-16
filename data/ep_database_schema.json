@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SistemaBiometricoControlAccesoEP",
+  "description": "Especificación de respuesta y modelo de datos para el Sistema de Control de Acceso y Prevención del Ejército del Perú (EP)",
+  "version": "2.4.0",
+  "institucion": "Ejército del Perú",
+  "dependencia_tecnologica": "Dirección de Telemática y Estadística del Ejército (DITE)",
+  "endpoints": {
+    "verificacion_biometrica_facial": {
+      "metodo": "POST",
+      "ruta": "/api/v2/biometria/facial/verificar",
+      "request_payload": {
+        "dispositivo_id": "TAB-GARITA-PT-04",
+        "puesto_control": "Prevención Principal - Puerta N° 1 (Pentagonito)",
+        "timestamp_captura": "2026-11-07T10:15:30.120-05:00",
+        "liveness_score": 0.985,
+        "liveness_checks": {
+          "blink_detected": true,
+          "head_turn_degrees": 8.4,
+          "anti_spoof_infrared": true
+        },
+        "embedding_vector_length": 512,
+        "calidad_imagen": 94
+      },
+      "ejemplos_respuesta": {
+        "acceso_autorizado": {
+          "codigo_respuesta": "EP-AUTH-200",
+          "estado_autorizacion": "AUTORIZADO",
+          "nivel_alerta": "VERDE_DEFCON_5",
+          "timestamp_evaluacion": "2026-11-07T10:15:30.450-05:00",
+          "personal": {
+            "cip": "318492010",
+            "dni": "45892104",
+            "grado": "Coronel EP",
+            "grado_abreviado": "CRL EP",
+            "arma_servicio": "Infantería",
+            "apellidos": "VÁSQUEZ HUAMÁN",
+            "nombres": "Carlos Alberto",
+            "unidad_actual": "Comandancia General del Ejército (CGE)",
+            "cargo": "Jefe de Estado Mayor Operativo",
+            "nivel_seguridad": "SECRETO_MILITAR_NIVEL_3",
+            "foto_referencia_hash": "sha256:d8a43f9a7c3b28b2",
+            "porte_arma_reglamentaria": {
+              "autorizado": true,
+              "serie_arma": "PIST-P226-EP-88412",
+              "municion_dotacion": "30 tiros 9x19mm Parabellum"
+            }
+          },
+          "control_ingreso": {
+            "tipo_pase": "PERMANENTE_OFICIAL",
+            "garita_acceso": "Garita N° 1 - Prevención San Borja",
+            "destino_predeterminado": "Cuartel General del Ejército - Pabellón A",
+            "vehiculo_autorizado": {
+              "placa": "EP-41029",
+              "marca_modelo": "Toyota Hilux 4x4 Verde OTAN"
+            },
+            "observaciones_guardia": "Personal con pase preferencial y escolta autorizada"
+          },
+          "biometria_match": {
+            "score_coincidencia": 0.991,
+            "metodo_predominante": "FACIAL_DEEP_DESCRIPTOR",
+            "tiempo_computo_ms": 132
+          }
+        },
+        "acceso_denegado_alerta": {
+          "codigo_respuesta": "EP-RESTRICTED-403",
+          "estado_autorizacion": "DENEGADO_ALERTA_TACTICA",
+          "nivel_alerta": "ROJO_INMEDIATO",
+          "timestamp_evaluacion": "2026-11-07T10:16:02.100-05:00",
+          "personal": {
+            "cip": "294817200",
+            "dni": "09482711",
+            "grado": "Ex-Capitán EP (En Situación de Retiro)",
+            "grado_abreviado": "CAP EP (R)",
+            "arma_servicio": "Comunicaciones",
+            "apellidos": "MENDOZA RETAMOZO",
+            "nombres": "Jorge Luis",
+            "unidad_actual": "Ninguna / Fuera de Cuadro",
+            "nivel_seguridad": "ACCESO_RESTRINGIDO",
+            "foto_referencia_hash": "sha256:77bc09a419fedc81"
+          },
+          "motivo_restriccion": {
+            "codigo_incidente": "ORD-JUD-EP-2026-089",
+            "descripcion": "ORDEN DE IMPEDIMENTO DE ACCESO A INSTALACIONES MILITARES E INVESTIGACIÓN EN CURSO POR INSPECTORÍA GENERAL DEL EJÉRCITO (IGE).",
+            "acciones_oficial_guardia": [
+              "Retener documento de identidad o CIP de inmediato.",
+              "Aislar al intervenido en la Sala de Prevención.",
+              "Notificar al Oficial de Guardia y activar Código Rojo de Reacción Rápida.",
+              "Comunicar a la Policía Militar (PM N° 501)."
+            ],
+            "notificar_oficial_guardia": true,
+            "prioridad_llamada": "INMEDIATA"
+          },
+          "biometria_match": {
+            "score_coincidencia": 0.978,
+            "metodo_predominante": "FACIAL_DEEP_DESCRIPTOR"
+          }
+        }
+      }
+    },
+    "verificacion_dactilar": {
+      "metodo": "POST",
+      "ruta": "/api/v2/biometria/dactilar/verificar",
+      "request_payload": {
+        "dispositivo_id": "USB-FINGERPRINT-OPT-02",
+        "wsq_template_hash": "sha256:1a84c0f3402e3b...",
+        "dedo_capturado": "INDICE_DERECHO",
+        "nfiq2_quality_score": 88
+      },
+      "ejemplo_respuesta": {
+        "codigo_respuesta": "EP-DACTILAR-200",
+        "estado_autorizacion": "AUTORIZADO",
+        "personal": {
+          "cip": "409281745",
+          "dni": "72948102",
+          "grado": "Técnico 1ra EP",
+          "grado_abreviado": "T1 EP",
+          "arma_servicio": "Material de Guerra",
+          "apellidos": "QUISPE MAMANI",
+          "nombres": "Edwin Wilfredo",
+          "unidad_actual": "Batallón de Material de Guerra N° 511",
+          "cargo": "Jefe de Polvorín y Armamento",
+          "nivel_seguridad": "CONFIDENCIAL"
+        },
+        "score_minucias": 96.4
+      }
+    },
+    "registro_visita_externa": {
+      "metodo": "POST",
+      "ruta": "/api/v2/prevencion/visitas/registrar",
+      "request_payload": {
+        "tipo_documento": "DNI",
+        "numero_documento": "44719283",
+        "apellidos_nombres": "ALVAREZ ROJAS, Fernando Martín",
+        "entidad_procedencia": "Ministerio de Defensa (MINDEF)",
+        "dependencia_destino": "Dirección de Inteligencia del Ejército (DINTE)",
+        "oficial_anfitrion": "CRL EP Mario Cárdenas",
+        "motivo_ingreso": "Reunión técnica de coordinación interinstitucional DITE-MINDEF",
+        "captura_voz_stt_transcripcion": "Dirigiéndose a la Dirección de Inteligencia por reunión con Coronel Cárdenas",
+        "pase_asignado": "VIS-2026-0491",
+        "puesto_control_ingreso": "Puerta N° 2 - Guardia de Prevención"
+      },
+      "respuesta": {
+        "codigo_registro": "EP-VIS-9812",
+        "estado": "PASE_EMITIDO",
+        "hora_ingreso": "2026-11-07T10:18:00-05:00",
+        "hora_limite_salida": "2026-11-07T14:00:00-05:00",
+        "requiere_acompanamiento": true
+      }
+    }
+  },
+  "catalogo_dependencias_militares_pe": [
+    "Cuartel General del Ejército (Pentagonito)",
+    "Comandancia General del Ejército (CGE)",
+    "Estado Mayor General del Ejército (EMGE)",
+    "Inspección General del Ejército (IGE)",
+    "Comandancia de Educación y Doctrina del Ejército (COEDE)",
+    "Dirección de Inteligencia del Ejército (DINTE)",
+    "Dirección de Telemática y Estadística (DITE)",
+    "Dirección de Logística del Ejército (DILOGE)",
+    "Dirección de Personal del Ejército (DIPERE)",
+    "Dirección de Sanidad del Ejército (COSALE)",
+    "Escuela Militar de Chorrillos (EMCH)",
+    "Escuela Técnica del Ejército (ETE)",
+    "Escuela Superior de Guerra (ESGE)",
+    "Batallón de Policía Militar N° 501",
+    "Pabellón de Oficiales Generales",
+    "Policlínico Militar de Chorrillos"
+  ]
+}
+

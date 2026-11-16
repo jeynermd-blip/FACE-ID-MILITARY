@@ -1,0 +1,2917 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-[#1E2215] text-gray-100">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sistema de Control de Acceso Militar | EjÃ©rcito del PerÃº</title>
+
+  <!-- TipografÃ­a TÃ¡ctica: Roboto Mono + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            mil: {
+              oliveDark: '#1E2215',    // Fondo principal profundo
+              oliveDeep: '#2E331B',    // Verde camuflaje secundario
+              oliveBase: '#3B441F',    // Verde olivo intermedio
+              olivePrimary: '#4B5320', // Verde olivo militar oficial
+              oliveLight: '#556B2F',   // Verde olivo claro
+              amber: '#DAA520',        // Dorado / Ãmbar militar tÃ¡ctico
+              amberGlow: '#F59E0B',
+              tacticalGray: '#2B2B2B', // Gris tÃ¡ctico
+              tacticalDark: '#171912', // Gris carbÃ³n militar
+              redAlert: '#B71C1C',     // Rojo tÃ¡ctico DEFCON
+              greenAuth: '#4CAF50',    // Verde autorizaciÃ³n
+            }
+          },
+          fontFamily: {
+            mono: ['"Roboto Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif']
+          },
+          keyframes: {
+            radarSweep: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4', filter: 'drop-shadow(0 0 2px #DAA520)' },
+              '50%': { opacity: '1', filter: 'drop-shadow(0 0 12px #DAA520)' }
+            },
+            laserScan: {
+              '0%': { top: '5%' },
+              '50%': { top: '85%' },
+              '100%': { top: '5%' }
+            }
+          },
+          animation: {
+            'radar': 'radarSweep 4s linear infinite',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+            'laser': 'laserScan 2.5s ease-in-out infinite'
+          }
+        }
+      }
+    }
+    // Manejo de Modal QR de Acceso
+    function abrirModalQR() {
+      soundSynth.playBeep(700, 0.05);
+      document.getElementById('modalQRAcceso').classList.remove('hidden');
+    }
+
+    function cerrarModalQR() {
+      document.getElementById('modalQRAcceso').classList.add('hidden');
+    }
+
+    function copiarLinkAcceso() {
+      const url = "https://ejercito-peru-control-tw6c6qr21q.brewpage.app/";
+      navigator.clipboard.writeText(url).then(() => {
+        soundSynth.playSuccess();
+        const btnTxt = document.getElementById('btnCopiarTexto');
+        btnTxt.innerText = "¡Copiado!";
+        setTimeout(() => { btnTxt.innerText = "Copiar Enlace"; }, 2000);
+      }).catch(() => {
+        prompt("Copie este enlace para compartir:", url);
+      });
+    }
+  </script>
+
+  <style>
+    /* Estilos tÃ¡cticos para retÃ­culas y scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #171912;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3B441F;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #DAA520;
+    }
+
+    .hud-grid {
+      background-size: 24px 24px;
+      background-image: linear-gradient(to right, rgba(75, 83, 32, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(75, 83, 32, 0.15) 1px, transparent 1px);
+    }
+
+    .crt-scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="h-full flex flex-col font-sans select-none overflow-x-hidden antialiased">
+
+  <!-- ========================================== -->
+  <!-- BARRA SUPERIOR: IDENTIDAD INSTITUCIONAL EP -->
+  <!-- ========================================== -->
+  <header class="bg-[#2E331B] border-b-2 border-[#DAA520] shadow-xl sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
+
+      <!-- Escudo e InstituciÃ³n -->
+      <div class="flex items-center gap-3">
+        <!-- Escudo Vectorial del EjÃ©rcito del PerÃº -->
+        <div class="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 relative">
+          <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">
+            <!-- Sol Radiante Incaico -->
+            <circle cx="50" cy="50" r="46" fill="#DAA520" opacity="0.25" />
+            <!-- Corona de Laureles TÃ¡ctica -->
+            <path d="M 50 8 C 22 8 12 30 12 58 C 12 76 28 92 50 92 C 72 92 88 76 88 58 C 88 30 78 8 50 8 Z"
+              fill="#2E331B" stroke="#DAA520" stroke-width="2.5" />
+            <!-- Franjas Bicolor Nacional en Escudo -->
+            <path d="M 26 24 L 74 24 L 74 72 C 74 80 50 88 50 88 C 50 88 26 80 26 72 Z" fill="#B71C1C" />
+            <path d="M 40 24 L 60 24 L 60 84 C 55 86 50 88 50 88 C 50 88 45 86 40 84 Z" fill="#FFFFFF" />
+            <!-- Espadas Cruzadas de Oficiales -->
+            <line x1="28" y1="28" x2="72" y2="72" stroke="#DAA520" stroke-width="3" stroke-linecap="round" />
+            <line x1="72" y1="28" x2="28" y2="72" stroke="#DAA520" stroke-width="3" stroke-linecap="round" />
+            <!-- Sol Central en Oro -->
+            <circle cx="50" cy="50" r="10" fill="#DAA520" stroke="#1E2215" stroke-width="1.5" />
+          </svg>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs sm:text-sm font-bold tracking-widest text-[#DAA520] font-mono">EJÃ‰RCITO DEL
+              PERÃš</span>
+            <span
+              class="hidden sm:inline-block px-1.5 py-0.2 bg-[#4B5320] text-[10px] font-mono rounded text-amber-200 border border-[#DAA520]/40">SISTEMA
+              SIPRE-BIO</span>
+          </div>
+          <h1 class="text-sm sm:text-base font-bold uppercase tracking-tight text-white flex items-center gap-2">
+            Puesto de Control y PrevenciÃ³n
+            <span class="relative flex h-2 w-2">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+          </h1>
+          <p class="text-[10px] text-gray-300 font-mono hidden md:block">GARITA NÂ° 01 â€¢ CUARTEL GENERAL DEL EJÃ‰RCITO
+            (PENTAGONITO)</p>
+        </div>
+      </div>
+
+      <!-- Controles TÃ¡cticos RÃ¡pidos: Dispositivo, Reloj y Audio -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Reloj Operativo Militar (Hora ZULU / Local) -->
+        <div class="text-right hidden sm:block bg-[#171912] px-3 py-1 rounded border border-[#3B441F]">
+          <div id="relojMilitar" class="font-mono text-xs sm:text-sm text-[#DAA520] font-bold">10:15:42 -05</div>
+          <div class="text-[9px] text-gray-400 uppercase font-mono tracking-wider">DEFCON 5 â€¢ SERVICIO ACTIVO</div>
+        </div>
+
+        <!-- Selector de Modo Dispositivo: Smartphone vs Tablet Garita -->
+        <div class="flex bg-[#171912] p-0.5 rounded-lg border border-[#4B5320]">
+          <button id="btnModoSmart" onclick="cambiarLayoutDispositivo('smartphone')" title="Modo Smartphone de Mano"
+            class="px-2.5 py-1 text-xs font-mono rounded flex items-center gap-1 transition-all bg-[#4B5320] text-white">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="7" y="2" width="10" height="20" rx="2" stroke-width="2" />
+              <circle cx="12" cy="18" r="1" fill="currentColor" />
+            </svg>
+            <span class="hidden md:inline">MÃ³vil</span>
+          </button>
+          <button id="btnModoTablet" onclick="cambiarLayoutDispositivo('tablet')" title="Modo Tablet Garita Fija"
+            class="px-2.5 py-1 text-xs font-mono rounded flex items-center gap-1 transition-all text-gray-300 hover:text-white">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2" />
+              <circle cx="12" cy="17" r="1" fill="currentColor" />
+            </svg>
+            <span class="hidden md:inline">Garita</span>
+          </button>
+        </div>
+
+        <!-- Botón Código QR Móvil -->
+        <button id="btnAbrirQR" onclick="abrirModalQR()" title="Ver Código QR para Móvil"
+          class="px-2.5 py-1 rounded bg-[#171912] border border-[#DAA520] text-[#DAA520] hover:bg-[#3B441F] transition flex items-center gap-1.5 text-xs font-mono">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          </svg>
+          <span class="hidden md:inline font-bold">QR Móvil</span>
+        </button>
+
+        <!-- Silenciar / Activar Audio Táctico -->
+        <button id="btnAudioMute" onclick="toggleAudioTactico()" title="Sonidos TÃ¡cticos"
+          class="p-1.5 rounded bg-[#171912] border border-[#4B5320] text-[#DAA520] hover:bg-[#3B441F] transition">
+          <svg id="iconAudioOn" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+          <svg id="iconAudioOff" class="w-4 h-4 hidden text-gray-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- BARRA DE SELECCIÃ“N DE PERFIL DE PRUEBA      -->
+  <!-- ========================================== -->
+  <div
+    class="bg-[#171912] border-b border-[#3B441F] px-3 sm:px-6 py-1.5 flex items-center justify-between overflow-x-auto text-xs font-mono gap-2">
+    <div class="flex items-center gap-2 flex-shrink-0 text-[#DAA520]">
+      <span class="inline-block w-2 h-2 rounded-full bg-[#DAA520] animate-pulse"></span>
+      <span class="font-bold uppercase tracking-wider">PERSONAL EP:</span>
+    </div>
+
+    <div id="contenedorPerfilesMilitares" class="flex items-center gap-2 overflow-x-auto py-0.5 flex-1">
+      <!-- Se carga dinamicamente -->
+    </div>
+
+    <!-- Boton Destacado Enrolar Rostro -->
+    <button type="button" onclick="abrirModalRegistroFacial()"
+      class="flex-shrink-0 px-3 py-1 bg-[#4B5320] hover:bg-[#556B2F] text-amber-200 border border-[#DAA520] rounded font-bold transition flex items-center gap-1.5 shadow">
+      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+      </svg>
+      <span>+ REGISTRAR ROSTRO</span>
+    </button>
+  </div>
+
+  <!-- BARRA DE BÚSQUEDA TÁCTICA RÁPIDA POR CIP / DNI / PLACA -->
+  <div
+    class="bg-[#1E2215] border-b border-[#3B441F] px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+    <div class="flex items-center gap-2 flex-1 min-w-[260px] max-w-md">
+      <div class="relative w-full">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-[#DAA520]">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input type="text" id="inputBusquedaCIP" placeholder="Buscar por CIP (ej: 318492010), DNI o Placa..."
+          onkeydown="if(event.key==='Enter') buscarPersonalMilitar()"
+          class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded pl-8 pr-16 py-1.5 text-white text-xs placeholder-gray-500 focus:outline-none">
+        <button onclick="buscarPersonalMilitar()"
+          class="absolute inset-y-0 right-0 px-2.5 bg-[#4B5320] hover:bg-[#556B2F] text-amber-200 text-[10px] font-bold rounded-r border-l border-[#DAA520]">
+          BUSCAR
+        </button>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 text-[10px] text-gray-400">
+      <span class="hidden sm:inline">BASE CENTRAL DITE-EP</span>
+      <span
+        class="px-2 py-0.5 rounded bg-[#2E331B] text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> EN LÍNEA
+      </span>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- CONTENEDOR PRINCIPAL RESPONSIVO           -->
+  <!-- ========================================== -->
+  <main id="appContainer" class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 transition-all duration-300">
+
+    <!-- GRID ADAPTABLE: 1 Col en MÃ³vil, 12 Cols en Tablet / Garita -->
+    <div id="mainLayoutGrid" class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 h-full">
+
+      <!-- ============================================== -->
+      <!-- COLUMNA IZQUIERDA: MÃ“DULOS DE BIOMETRÃA & VOZ  -->
+      <!-- ============================================== -->
+      <section class="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
+
+        <!-- PESTAÃ‘AS DE MÃ“DULOS TÃCTICOS -->
+        <div
+          class="bg-[#2E331B] p-1.5 rounded-lg border border-[#4B5320] flex items-center justify-between font-mono text-xs">
+          <div class="flex gap-1 w-full">
+            <button id="tabBtnFacial" onclick="cambiarModulo('facial')"
+              class="flex-1 py-2 px-2 rounded-md font-bold text-center transition flex items-center justify-center gap-1.5 bg-[#4B5320] text-amber-300 shadow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>1. FACIAL (CÃMARA)</span>
+            </button>
+            <button id="tabBtnDactilar" onclick="cambiarModulo('dactilar')"
+              class="flex-1 py-2 px-2 rounded-md font-bold text-center transition flex items-center justify-center gap-1.5 text-gray-300 hover:text-white hover:bg-[#3B441F]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 001.077 4M12 11a4 4 0 00-4 4" />
+              </svg>
+              <span>2. DACTILAR (AFIS)</span>
+            </button>
+            <button id="tabBtnVoz" onclick="cambiarModulo('voz')"
+              class="flex-1 py-2 px-2 rounded-md font-bold text-center transition flex items-center justify-center gap-1.5 text-gray-300 hover:text-white hover:bg-[#3B441F]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <span>3. VOZ (VISITAS)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- MÃ“DULO 1: RECONOCIMIENTO FACIAL           -->
+        <!-- ========================================= -->
+        <div id="moduloFacial"
+          class="bg-[#171912] rounded-xl border border-[#3B441F] p-3 sm:p-4 flex flex-col flex-1 shadow-2xl relative overflow-hidden">
+
+          <!-- Encabezado del visor con estado militar -->
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2E331B]">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-mono text-xs text-[#DAA520] font-bold">SENSOR Ã“PTICO / RGB-IR ACTIVO</span>
+            </div>
+            <div class="font-mono text-[11px] text-gray-400">
+              LIVENESS ALGORITHM: <span class="text-emerald-400 font-bold">V4.8 TACTICAL</span>
+            </div>
+          </div>
+
+          <!-- VISOR DE CÃMARA MILITAR CON HUD / RETÃCULA -->
+          <div
+            class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-black rounded-lg overflow-hidden border-2 border-[#4B5320] flex items-center justify-center shadow-inner">
+
+            <!-- Video de Webcam Real (Oculto o Activo segÃºn permiso) -->
+            <video id="webcamVideo" autoplay playsinline muted
+              class="absolute inset-0 w-full h-full object-cover hidden"></video>
+
+            <!-- SimulaciÃ³n Visual de Sujeto si la webcam no estÃ¡ activa -->
+            <div id="simulatedFaceTarget"
+              class="absolute inset-0 w-full h-full flex items-center justify-center opacity-85">
+              <img id="imgObjetivoFacial"
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&crop=faces"
+                alt="Objetivo Facial" class="w-full h-full object-cover filter contrast-125 brightness-90">
+              <!-- Overlay de camuflaje / filtro tÃ©rmico militar tenue -->
+              <div class="absolute inset-0 bg-[#3B441F]/30 mix-blend-color"></div>
+            </div>
+
+            <!-- Canvas TÃ¡ctico para RetÃ­cula, Ã“valo y Coordenadas HUD -->
+            <canvas id="hudCanvas" width="640" height="400"
+              class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
+
+            <!-- Efecto Scanlines de Visor TÃ¡ctico Militar -->
+            <div class="absolute inset-0 crt-scanlines z-20"></div>
+
+            <!-- Overlay de TelemetrÃ­a TÃ¡ctica Superior -->
+            <div
+              class="absolute top-2 left-3 right-3 z-30 flex justify-between font-mono text-[10px] text-emerald-400 tracking-wider">
+              <div class="bg-black/60 px-2 py-0.5 rounded border border-emerald-500/30">TARGET: ENCUADRE Ã“PTICO</div>
+              <div class="bg-black/60 px-2 py-0.5 rounded border border-emerald-500/30">ANTI-SPOOF: ACTIVO</div>
+            </div>
+
+            <!-- BotÃ³n flotante para Alternar Webcam Real vs SimulaciÃ³n -->
+            <button onclick="toggleWebcamReal()" title="Activar/Desactivar CÃ¡mara Real del Dispositivo"
+              class="absolute bottom-2 right-2 z-30 bg-[#2E331B]/80 hover:bg-[#3B441F] text-amber-300 border border-[#DAA520]/50 px-2 py-1 rounded text-[10px] font-mono flex items-center gap-1 backdrop-blur-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span id="txtBtnCam">Usar CÃ¡mara Web</span>
+            </button>
+          </div>
+
+          <!-- INDICADOR DE ESTADO EN TIEMPO REAL REQUERIDO -->
+          <!-- [ESCANEANDO ROSTRO...] -> [VERIFICANDO EN BASE DE DATOS EP] -> [ACCESO CONCEDIDO / DENEGADO] -->
+          <div
+            class="mt-3 p-2.5 rounded-lg bg-[#1E2215] border border-[#4B5320] flex items-center justify-between font-mono">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <div id="statusPulseDot" class="w-3 h-3 rounded-full bg-[#DAA520] animate-ping flex-shrink-0"></div>
+              <span id="indicadorEstadoFacial"
+                class="text-xs sm:text-sm font-bold text-[#DAA520] tracking-wide truncate">
+                [SISTEMA EN ESPERA - COLOQUE ROSTRO EN Ã“VALO]
+              </span>
+            </div>
+            <div id="livenessBadge"
+              class="hidden text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-blue-900/60 text-blue-300 border border-blue-500/40">
+              PRUEBA DE VIDA OK
+            </div>
+          </div>
+
+          <!-- BOTONES DE ACCIÃ“N DE ESCANEO -->
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <button id="btnEscanearFacial" onclick="ejecutarEscaneoFacial()"
+              class="py-2.5 px-4 bg-[#4B5320] hover:bg-[#556B2F] active:bg-[#3B441F] text-amber-200 border border-[#DAA520] rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>INICIAR ESCANEO FACIAL</span>
+            </button>
+            <button onclick="reiniciarFlujoBiometrico()"
+              class="py-2.5 px-3 bg-[#2B2B2B] hover:bg-[#3B441F] text-gray-300 rounded-lg font-mono text-xs font-semibold flex items-center justify-center gap-1.5 border border-[#3B441F] transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>REINICIAR VISOR</span>
+            </button>
+          </div>
+
+          <!-- BOTÓN DESTACADO PARA REGISTRAR / ENROLAR ROSTRO CON CÁMARA -->
+          <button onclick="abrirModalRegistroFacial()"
+            class="mt-2.5 w-full py-2.5 px-3 bg-gradient-to-r from-[#2E331B] via-[#3B441F] to-[#4B5320] hover:from-[#3B441F] hover:to-[#556B2F] text-emerald-300 hover:text-emerald-200 border border-emerald-500/60 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            <span>REGISTRAR NUEVO ROSTRO CON CÁMARA</span>
+          </button>
+
+        </div>
+
+        <!-- ========================================= -->
+        <!-- MÃ“DULO 2: RECONOCIMIENTO DACTILAR (AFIS)  -->
+        <!-- ========================================= -->
+        <div id="moduloDactilar"
+          class="hidden bg-[#171912] rounded-xl border border-[#3B441F] p-3 sm:p-4 flex flex-col flex-1 shadow-2xl relative">
+
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2E331B]">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#DAA520]"></span>
+              <span class="font-mono text-xs text-[#DAA520] font-bold">LECTOR DE HUELLAS DACTILARES MILITAR
+                (AFIS-EP)</span>
+            </div>
+            <div class="font-mono text-[11px] text-gray-400">
+              CANAL: <span class="text-amber-300">USB / BLUETOOTH GARITA</span>
+            </div>
+          </div>
+
+          <!-- Visualizador GrÃ¡fico de Huella con Barrido LÃ¡ser Verde Olivo -->
+          <div class="flex flex-col sm:flex-row items-center gap-4 bg-[#1E2215] p-4 rounded-xl border border-[#4B5320]">
+
+            <!-- Sensor Interactivo con Canvas -->
+            <div
+              class="relative w-48 h-56 bg-black/80 rounded-2xl border-2 border-[#4B5320] flex items-center justify-center p-2 shadow-2xl overflow-hidden cursor-pointer group"
+              onclick="ejecutarEscaneoDactilar()" title="Presione para Escaneo Dactilar">
+              <!-- Canvas de Huella -->
+              <canvas id="canvasFingerprint" width="180" height="220" class="w-full h-full object-contain"></canvas>
+              <!-- LÃ­nea de Escaneo LÃ¡ser -->
+              <div id="laserScanBar"
+                class="hidden absolute left-0 right-0 h-1 bg-[#DAA520] shadow-[0_0_12px_#DAA520] animate-laser"></div>
+              <!-- InstrucciÃ³n tÃ¡ctil flotante -->
+              <div
+                class="absolute bottom-2 text-center text-[9px] font-mono text-gray-400 group-hover:text-amber-300 transition">
+                [PRESIONAR SENSOR]
+              </div>
+            </div>
+
+            <!-- Panel de MÃ©tricas de Minucias BiomÃ©tricas -->
+            <div class="flex-1 w-full space-y-2.5 font-mono text-xs">
+              <div class="bg-[#171912] p-2.5 rounded border border-[#2E331B]">
+                <div class="text-gray-400 text-[10px] uppercase">Estado del Sensor BiomÃ©dico:</div>
+                <div id="estadoSensorDactilar" class="text-amber-400 font-bold mt-0.5">[ESPERANDO COLOCACIÃ“N DEL DEDO]
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-[#171912] p-2 rounded border border-[#2E331B]">
+                  <span class="text-[9px] text-gray-400 block">CALIDAD NFIQ2</span>
+                  <span id="nfiqQualityText" class="text-emerald-400 font-bold text-sm">88 / 100</span>
+                </div>
+                <div class="bg-[#171912] p-2 rounded border border-[#2E331B]">
+                  <span class="text-[9px] text-gray-400 block">MINUCIAS MATCH</span>
+                  <span id="minutiaeCountText" class="text-amber-400 font-bold text-sm">54 PUNTOS</span>
+                </div>
+              </div>
+
+              <!-- Barra de Progreso de Cotejo AFIS -->
+              <div>
+                <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                  <span>COTEJO EN BASE DE DATOS CIP/DNI:</span>
+                  <span id="dactilarProgresoPct" class="text-amber-300 font-bold">0%</span>
+                </div>
+                <div class="w-full bg-black/60 h-2.5 rounded-full overflow-hidden border border-[#3B441F]">
+                  <div id="dactilarProgressBar"
+                    class="h-full bg-gradient-to-r from-[#4B5320] via-[#DAA520] to-[#556B2F] transition-all duration-100"
+                    style="width: 0%"></div>
+                </div>
+              </div>
+
+              <button onclick="ejecutarEscaneoDactilar()"
+                class="w-full py-2.5 bg-[#4B5320] hover:bg-[#556B2F] text-amber-200 border border-[#DAA520] rounded-lg font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                </svg>
+                <span>LEER HUELLA DACTILAR</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ========================================= -->
+        <!-- MÃ“DULO 3: REGISTRO DE VISITAS POR VOZ     -->
+        <!-- ========================================= -->
+        <div id="moduloVoz"
+          class="hidden bg-[#171912] rounded-xl border border-[#3B441F] p-3 sm:p-4 flex flex-col flex-1 shadow-2xl relative">
+
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2E331B]">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span class="font-mono text-xs text-[#DAA520] font-bold">RECONOCIMIENTO DE VOZ - PREVENCIÃ“N
+                MILITAR</span>
+            </div>
+            <div class="font-mono text-[11px] text-gray-400">
+              IDIOMA: <span class="text-amber-300 font-bold">ES-PE (MILITAR)</span>
+            </div>
+          </div>
+
+          <!-- BOTÃ“N PROMINENTE DE ACTIVACIÃ“N DE MICRÃ“FONO REQUERIDO -->
+          <div
+            class="flex flex-col items-center justify-center py-4 px-2 bg-[#1E2215] rounded-xl border border-[#4B5320] text-center">
+
+            <button id="btnMicrofonoVoz" onclick="toggleReconocimientoVoz()"
+              class="relative group p-5 sm:p-6 rounded-full bg-gradient-to-br from-[#3B441F] to-[#2E331B] border-2 border-[#DAA520] shadow-[0_0_20px_rgba(218,165,32,0.3)] hover:scale-105 active:scale-95 transition-all">
+              <!-- Ondas de PulsaciÃ³n -->
+              <div id="micPulseWave"
+                class="hidden absolute inset-0 rounded-full border-2 border-amber-400 animate-ping opacity-75"></div>
+
+              <svg id="micIcon"
+                class="w-8 h-8 sm:w-10 sm:h-10 text-amber-300 transition-transform group-hover:scale-110" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+
+            <span id="btnMicLabel"
+              class="mt-3 font-mono text-xs sm:text-sm font-bold text-amber-300 uppercase tracking-widest">
+              REGISTRAR DESTINO POR VOZ
+            </span>
+            <p class="text-[11px] text-gray-400 mt-1 max-w-sm">
+              Indique por voz la dependencia oficial de destino y el motivo del ingreso civil o militar.
+            </p>
+
+            <!-- Presets de Voz RÃ¡pidos para DemostraciÃ³n -->
+            <div class="mt-3 flex flex-wrap justify-center gap-1.5 font-mono text-[10px]">
+              <span class="text-gray-400 py-1">Atajos de Voz:</span>
+              <button
+                onclick="simularFraseVoz('DirigiÃ©ndose al Cuartel General del EjÃ©rcito para reuniÃ³n en Estado Mayor')"
+                class="px-2 py-0.5 rounded bg-[#2B2B2B] hover:bg-[#3B441F] text-amber-200 border border-[#3B441F]">"Cuartel
+                General"</button>
+              <button onclick="simularFraseVoz('DirigiÃ©ndose a la Comandancia de EducaciÃ³n y Doctrina - COEDE')"
+                class="px-2 py-0.5 rounded bg-[#2B2B2B] hover:bg-[#3B441F] text-amber-200 border border-[#3B441F]">"COEDE"</button>
+              <button
+                onclick="simularFraseVoz('Visita tÃ©cnica al PabellÃ³n de Oficiales por mantenimiento de telemÃ¡tica')"
+                class="px-2 py-0.5 rounded bg-[#2B2B2B] hover:bg-[#3B441F] text-amber-200 border border-[#3B441F]">"PabellÃ³n
+                Oficiales"</button>
+            </div>
+          </div>
+
+          <!-- CONFIRMACIÃ“N VISUAL EN PANTALLA REQUERIDA (CON OPCIÃ“N DE EDITAR O CONFIRMAR POR VOZ) -->
+          <div class="mt-3 space-y-2 font-mono">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] text-amber-300 font-bold uppercase">TranscripciÃ³n Detectada (STT):</label>
+              <span id="estadoMicrofonoText" class="text-[10px] text-gray-400">EN ESPERA</span>
+            </div>
+
+            <textarea id="textoTranscritoVoz" rows="2"
+              class="w-full bg-[#1E2215] border border-[#4B5320] focus:border-[#DAA520] rounded p-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-[#DAA520]"
+              placeholder="El texto transcrito por voz aparecerÃ¡ aquÃ­. TambiÃ©n puede editar manualmente..."></textarea>
+
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <div class="text-[10px] text-gray-400">
+                Dependencia Normalizada: <span id="dependenciaNormalizadaVoz"
+                  class="text-emerald-400 font-bold">-</span>
+              </div>
+
+              <div class="flex gap-2">
+                <button onclick="limpiarVoz()"
+                  class="px-2.5 py-1.5 bg-[#2B2B2B] hover:bg-gray-700 text-gray-300 text-xs rounded border border-[#3B441F]">
+                  Borrar
+                </button>
+                <button onclick="confirmarRegistroPorVoz()"
+                  class="px-3.5 py-1.5 bg-[#4CAF50] hover:bg-green-600 text-white text-xs font-bold rounded flex items-center gap-1.5 shadow">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>CONFIRMAR REGISTRO</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ============================================== -->
+      <!-- COLUMNA DERECHA: ESTADOS Y ALERTAS DEL SISTEMA -->
+      <!-- ============================================== -->
+      <section class="lg:col-span-5 flex flex-col gap-3 sm:gap-4">
+
+        <!-- ============================================== -->
+        <!-- ESTADO 1: ACCESO AUTORIZADO (BANNER VERDE OLIVO)-->
+        <!-- ============================================== -->
+        <div id="estadoAutorizadoCard"
+          class="bg-[#171912] rounded-xl border border-[#4CAF50] shadow-2xl overflow-hidden flex flex-col transition-all">
+
+          <!-- Banner Superior Verde Olivo Claro (#4CAF50 / #556B2F) -->
+          <div
+            class="bg-gradient-to-r from-[#4CAF50] to-[#556B2F] px-4 py-2.5 flex items-center justify-between text-white font-mono shadow-md">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="font-bold text-xs sm:text-sm tracking-wider uppercase">ACCESO AUTORIZADO</span>
+            </div>
+            <span class="text-[10px] bg-black/30 px-2 py-0.5 rounded font-mono font-bold tracking-widest">VALIDADO
+              EP</span>
+          </div>
+
+          <!-- Contenido Detallado del Personal Militar -->
+          <div class="p-3 sm:p-4 space-y-3 font-mono text-xs">
+
+            <div class="flex gap-3 items-center">
+              <img id="authFotoPersonal"
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces"
+                alt="Militar"
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border-2 border-[#DAA520] shadow">
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span id="authGradoAbrev"
+                    class="px-1.5 py-0.5 bg-[#4B5320] text-amber-300 font-bold text-[10px] rounded">CRL EP</span>
+                  <span id="authArma" class="text-gray-300 text-[11px]">INFANTERÃA</span>
+                </div>
+                <h3 id="authApellidosNombres" class="font-bold text-sm sm:text-base text-white truncate mt-0.5">VÃSQUEZ
+                  HUAMÃN, Carlos A.</h3>
+                <p id="authCargo" class="text-[11px] text-[#DAA520] truncate">Jefe de Estado Mayor Operativo</p>
+                <div class="text-[10px] text-gray-400 mt-0.5 flex gap-2">
+                  <span>CIP: <strong id="authCIP" class="text-white">318492010</strong></span>
+                  <span>DNI: <strong id="authDNI" class="text-white">45892104</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-[#2E331B] text-[11px]">
+              <div class="bg-[#1E2215] p-2 rounded border border-[#3B441F]">
+                <span class="text-[9px] text-gray-400 block uppercase">Unidad Militar:</span>
+                <span id="authUnidad" class="text-white font-medium truncate block">Comandancia General (CGE)</span>
+              </div>
+              <div class="bg-[#1E2215] p-2 rounded border border-[#3B441F]">
+                <span class="text-[9px] text-gray-400 block uppercase">Hora Exacta Ingreso:</span>
+                <span id="authHoraIngreso" class="text-emerald-400 font-bold block">10:15:30 -05</span>
+              </div>
+              <div class="bg-[#1E2215] p-2 rounded border border-[#3B441F] col-span-2">
+                <span class="text-[9px] text-gray-400 block uppercase">Destino Asignado:</span>
+                <span id="authDestino" class="text-[#DAA520] font-bold block truncate">Cuartel General del EjÃ©rcito -
+                  PabellÃ³n A</span>
+              </div>
+            </div>
+
+            <!-- Porte de Arma y VehÃ­culo Reglamentario -->
+            <div class="bg-[#1E2215] p-2 rounded border border-[#3B441F] text-[10px] space-y-1">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400">Armamento de DotaciÃ³n:</span>
+                <span id="authArmamento" class="text-emerald-300 font-bold">PIST-P226-EP-88412 (30 tiros)</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-400">VehÃ­culo Autorizado:</span>
+                <span id="authVehiculo" class="text-white truncate max-w-[200px]">Toyota Hilux EP-41029</span>
+              </div>
+            </div>
+
+            <div class="text-[9px] text-gray-400 italic">
+              * Registro de PrevenciÃ³n almacenado en bitÃ¡cora criptogrÃ¡fica DITE-EP.
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- ESTADO 2: ACCESO DENEGADO / ALERTA (ROJO DEFCON)-->
+        <!-- ============================================== -->
+        <div id="estadoDenegadoCard"
+          class="hidden bg-[#171912] rounded-xl border-2 border-[#B71C1C] shadow-[0_0_25px_rgba(183,28,28,0.4)] overflow-hidden flex flex-col transition-all animate-pulse">
+
+          <!-- Banner Rojo TÃ¡ctico (#B71C1C) -->
+          <div class="bg-[#B71C1C] px-4 py-2.5 flex items-center justify-between text-white font-mono shadow-md">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="font-bold text-xs sm:text-sm tracking-wider uppercase">SIN AUTORIZACIÃ“N / RESTRICCIÃ“N DE
+                INGRESO</span>
+            </div>
+            <span
+              class="text-[10px] bg-black/40 px-2 py-0.5 rounded font-mono font-bold tracking-widest text-red-200">DEFCON
+              1</span>
+          </div>
+
+          <div class="p-3 sm:p-4 space-y-3 font-mono text-xs">
+            <div class="flex gap-3 items-center">
+              <img id="deniedFoto"
+                src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&h=200&fit=crop&crop=faces"
+                alt="Intervenido"
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border-2 border-red-500 filter grayscale">
+              <div class="flex-1 min-w-0">
+                <span id="deniedGrado"
+                  class="px-1.5 py-0.5 bg-red-900 text-red-200 font-bold text-[10px] rounded">EX-CAP EP (R)</span>
+                <h3 id="deniedNombre" class="font-bold text-sm sm:text-base text-red-400 truncate mt-0.5">MENDOZA
+                  RETAMOZO, Jorge</h3>
+                <div class="text-[10px] text-gray-400 mt-0.5 flex gap-2">
+                  <span>CIP: <strong id="deniedCIP" class="text-white">294817200</strong></span>
+                  <span>DNI: <strong id="deniedDNI" class="text-white">09482711</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Motivo de la Alerta -->
+            <div class="bg-red-950/50 border border-red-700/60 p-2.5 rounded text-red-200 space-y-1">
+              <div class="flex items-center gap-1.5 text-red-400 font-bold text-[11px]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>ORDEN JUDICIAL / RESTRICCIÃ“N DE INSPECTORÃA:</span>
+              </div>
+              <p id="deniedDescripcion" class="text-[10px] leading-relaxed">
+                ORDEN DE IMPEDIMENTO DE ACCESO A INSTALACIONES MILITARES E INVESTIGACIÃ“N EN CURSO POR INSPECTORÃA
+                GENERAL DEL EJÃ‰RCITO (IGE).
+              </p>
+            </div>
+
+            <!-- BOTÃ“N REQUERIDO: NOTIFICAR AL OFICIAL DE GUARDIA -->
+            <button onclick="notificarOficialGuardia()"
+              class="w-full py-3 bg-[#B71C1C] hover:bg-red-700 active:bg-red-900 text-white rounded-lg font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg transition">
+              <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span>NOTIFICAR AL OFICIAL DE GUARDIA (PM 501)</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- ESTADO 3: REGISTRO DE VISITA EXTERNA (FORMULARIO)-->
+        <!-- ============================================== -->
+        <div id="estadoVisitaCard"
+          class="bg-[#171912] rounded-xl border border-[#3B441F] shadow-2xl p-3 sm:p-4 flex flex-col font-mono text-xs">
+
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2E331B]">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+              </svg>
+              <span class="font-bold text-white text-xs uppercase">REGISTRO DE VISITA EXTERNA / CIVIL</span>
+            </div>
+            <button onclick="autollenarVisitaEjemplo()" class="text-[10px] text-amber-300 hover:underline">Autollenar
+              DNI</button>
+          </div>
+
+          <form id="formVisitaExterna" onsubmit="registrarPaseVisita(event)" class="space-y-2.5">
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[9px] text-gray-400 block mb-0.5">TIPO DOC:</label>
+                <select id="visitaTipoDoc"
+                  class="w-full bg-[#1E2215] border border-[#3B441F] rounded p-1.5 text-white text-[11px] focus:outline-none">
+                  <option value="DNI">DNI</option>
+                  <option value="PASAPORTE">PASAPORTE</option>
+                  <option value="CARNET_EXT">C.E.</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="text-[9px] text-gray-400 block mb-0.5">NÂ° DOCUMENTO:</label>
+                <div class="flex gap-1">
+                  <input type="text" id="visitaNumDoc" placeholder="Ej: 44719283" required
+                    class="flex-1 bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-white text-[11px] focus:outline-none">
+                  <button type="button" onclick="consultarRENIEC()" title="Cotejar DNI"
+                    class="px-2 bg-[#2B2B2B] hover:bg-[#3B441F] rounded text-amber-300 text-[10px] border border-[#3B441F]">RENIEC</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[9px] text-gray-400 block mb-0.5">APELLIDOS Y NOMBRES:</label>
+              <input type="text" id="visitaNombres" placeholder="ALVAREZ ROJAS, Fernando MartÃ­n" required
+                class="w-full bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-white text-[11px] focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[9px] text-gray-400 block mb-0.5">ENTIDAD / INSTITUCIÃ“N:</label>
+                <input type="text" id="visitaEntidad" placeholder="MINDEF / Proveedor"
+                  class="w-full bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-white text-[11px] focus:outline-none">
+              </div>
+              <div>
+                <label class="text-[9px] text-gray-400 block mb-0.5">OFICIAL ANFITRIÃ“N:</label>
+                <input type="text" id="visitaOficial" placeholder="CRL EP M. CÃ¡rdenas"
+                  class="w-full bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-white text-[11px] focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[9px] text-gray-400 block mb-0.5">DEPENDENCIA DESTINO (AUTOFILL VOZ):</label>
+              <input type="text" id="visitaDestino" placeholder="Ej: DirecciÃ³n de Inteligencia (DINTE)" required
+                class="w-full bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-amber-300 font-bold text-[11px] focus:outline-none">
+            </div>
+
+            <div>
+              <label class="text-[9px] text-gray-400 block mb-0.5">MOTIVO DE INGRESO:</label>
+              <input type="text" id="visitaMotivo" placeholder="ReuniÃ³n tÃ©cnica de coordinaciÃ³n interinstitucional"
+                required
+                class="w-full bg-[#1E2215] border border-[#3B441F] focus:border-[#DAA520] rounded px-2 py-1.5 text-white text-[11px] focus:outline-none">
+            </div>
+
+            <button type="submit"
+              class="w-full py-2 bg-[#3B441F] hover:bg-[#4B5320] text-amber-200 border border-[#DAA520] rounded font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-1.5 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>EMITIR PASE DE VISITA MILITAR</span>
+            </button>
+          </form>
+
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- BITÃCORA TÃCTICA DE ACCESOS RECIENTES (FOOTER) -->
+    <!-- ============================================== -->
+    <div class="mt-3 sm:mt-4 bg-[#171912] rounded-xl border border-[#3B441F] p-3 font-mono text-xs">
+      <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-[#2E331B]">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="font-bold text-[#DAA520]">BITÃCORA DE CONTROL DE ACCESO (HISTORIAL EN TIEMPO REAL)</span>
+        </div>
+        <span class="text-[10px] text-gray-400">PUESTO: GARITA NÂ° 01 â€¢ OFICIAL DE PREVENCIÃ“N: TTE EP R.
+          SALGADO</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-[11px]">
+          <thead>
+            <tr class="text-gray-400 border-b border-[#2E331B]">
+              <th class="py-1 px-2">HORA</th>
+              <th class="py-1 px-2">CIP / DNI</th>
+              <th class="py-1 px-2">PERSONAL / VISITANTE</th>
+              <th class="py-1 px-2">MÃ‰TODO</th>
+              <th class="py-1 px-2">ESTADO</th>
+              <th class="py-1 px-2">DESTINO</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBitacoraAccesos" class="divide-y divide-[#2E331B]">
+            <!-- Filas dinÃ¡micas -->
+            <tr>
+              <td class="py-1 px-2 text-gray-300">10:14:10</td>
+              <td class="py-1 px-2 font-bold text-white">409281745</td>
+              <td class="py-1 px-2">T1 EP QUISPE MAMANI, Edwin</td>
+              <td class="py-1 px-2 text-amber-300">DACTILAR</td>
+              <td class="py-1 px-2"><span
+                  class="px-1.5 py-0.2 bg-green-900/60 text-green-300 rounded font-bold">AUTORIZADO</span></td>
+              <td class="py-1 px-2 text-gray-300 truncate max-w-xs">PolvorÃ­n General</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL TÃCTICO: NOTIFICACIÃ“N A OFICIAL DE GUARDIA -->
+  <!-- ============================================== -->
+  <div id="modalOficialGuardia"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-mono">
+    <div
+      class="w-full max-w-md bg-[#171912] border-2 border-red-600 rounded-xl shadow-[0_0_50px_rgba(255,0,0,0.5)] overflow-hidden">
+      <div class="bg-red-800 text-white px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2 font-bold text-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>ALERTA DE SEGURIDAD OPERATIVA</span>
+        </div>
+        <button onclick="cerrarModalGuardia()" class="text-white hover:text-gray-300">âœ•</button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs">
+        <p class="text-red-300 font-bold">
+          COMUNICACIÃ“N RADIAL DIRECTA CON OFICIAL DE GUARDIA Y BATALLÃ“N PM NÂ° 501
+        </p>
+        <div class="bg-black/60 p-3 rounded border border-red-900 text-gray-300 space-y-1">
+          <div><strong class="text-white">Intervenido:</strong> <span id="modalIntervenidoNombre">MENDOZA RETAMOZO,
+              Jorge</span></div>
+          <div><strong class="text-white">CIP:</strong> <span id="modalIntervenidoCIP">294817200</span></div>
+          <div><strong class="text-white">Puesto:</strong> PrevenciÃ³n Principal - Garita NÂ° 1</div>
+          <div><strong class="text-white">DisposiciÃ³n:</strong> RetenciÃ³n de documento e intervenciÃ³n inmediata en
+            sala de prevenciÃ³n.</div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button onclick="confirmarDespachoPM()"
+            class="flex-1 py-2.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded flex items-center justify-center gap-2 shadow">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>DESPACHAR PATRULLA PM</span>
+          </button>
+          <button onclick="cerrarModalGuardia()" class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL TÁCTICO: CÓDIGO QR PARA ESCANEO DESDE SMARTPHONE -->
+  <!-- ============================================== -->
+  <div id="modalQRAcceso"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-mono">
+    <div
+      class="w-full max-w-sm bg-[#171912] border-2 border-[#DAA520] rounded-xl shadow-[0_0_40px_rgba(218,165,32,0.35)] overflow-hidden text-center">
+      <div class="bg-[#2E331B] text-white px-4 py-3 flex items-center justify-between border-b border-[#DAA520]">
+        <div class="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#DAA520]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          </svg>
+          <span>ACCESO MÓVIL POR CÓDIGO QR</span>
+        </div>
+        <button onclick="cerrarModalQR()" class="text-gray-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="p-5 flex flex-col items-center gap-3">
+        <p class="text-xs text-gray-300">
+          Escanee este código con la cámara de su smartphone para abrir el sistema en patrullaje o garita:
+        </p>
+
+        <!-- Contenedor del QR con marco militar -->
+        <div class="p-3 bg-white rounded-lg shadow-xl border-4 border-[#4B5320] relative">
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://ejercito-peru-control-tw6c6qr21q.brewpage.app/&color=1E2215&bgcolor=FFFFFF&margin=10"
+            alt="QR Acceso Militar EP" class="w-56 h-56 object-contain" />
+        </div>
+
+        <div
+          class="bg-[#1E2215] p-2 rounded border border-[#3B441F] w-full text-[10px] text-gray-400 break-all font-mono">
+          https://ejercito-peru-control-tw6c6qr21q.brewpage.app/
+        </div>
+
+        <div class="flex gap-2 w-full pt-1">
+          <button onclick="copiarLinkAcceso()"
+            class="flex-1 py-2 bg-[#4B5320] hover:bg-[#556B2F] text-amber-200 text-xs font-bold rounded border border-[#DAA520] transition flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <span id="btnCopiarTexto">Copiar Enlace</span>
+          </button>
+          <button onclick="cerrarModalQR()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: PASE DE VISITA OFICIAL MILITAR         -->
+  <!-- ============================================== -->
+  <div id="modalPaseVisitaOficial"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-mono">
+    <div class="w-full max-w-sm bg-white text-black rounded-lg shadow-2xl overflow-hidden border-4 border-[#3B441F]">
+      <!-- Encabezado Militar del Pase -->
+      <div class="bg-[#2E331B] text-white p-3 text-center border-b-2 border-[#DAA520]">
+        <div class="text-[10px] text-amber-300 font-bold uppercase tracking-widest">EJERCITO DEL PERU</div>
+        <div class="text-xs font-bold uppercase">PASE OFICIAL DE CONTROL DE ACCESO</div>
+        <div class="text-[9px] text-gray-300">PUESTO DE CONTROL Y PREVENCION - GARITA N° 01</div>
+      </div>
+
+      <div class="p-4 space-y-2 text-xs" id="imprimiblePaseVisita">
+        <div class="flex justify-between items-center border-b pb-1">
+          <span class="font-bold text-[11px] text-[#3B441F]">N° PASE:</span>
+          <span id="paseNumeroCodigo"
+            class="font-bold text-sm bg-amber-100 px-2 py-0.5 rounded border border-amber-300">VIS-2026-9481</span>
+        </div>
+
+        <div class="space-y-1 text-[11px]">
+          <div><strong class="text-gray-600">VISITANTE:</strong> <span id="paseNombreVisitante"
+              class="font-bold block">ALVAREZ ROJAS, Fernando</span></div>
+          <div><strong class="text-gray-600">DOCUMENTO:</strong> <span id="paseDNI">DNI 44719283</span></div>
+          <div><strong class="text-gray-600">ENTIDAD:</strong> <span id="paseEntidad">Ministerio de Defensa
+              (MINDEF)</span></div>
+          <div><strong class="text-gray-600">DESTINO:</strong> <span id="paseDestino"
+              class="font-bold text-[#3B441F]">Dirección de Inteligencia (DINTE)</span></div>
+          <div><strong class="text-gray-600">OFICIAL ANFITRION:</strong> <span id="paseOficial">CRL EP M.
+              Cárdenas</span></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-1 pt-1 border-t text-[10px]">
+          <div class="bg-gray-100 p-1.5 rounded">
+            <span class="text-gray-500 block">HORA INGRESO:</span>
+            <strong id="paseHoraIngreso" class="text-green-700">10:18 -05</strong>
+          </div>
+          <div class="bg-gray-100 p-1.5 rounded">
+            <span class="text-gray-500 block">HORA LIMITE SALIDA:</span>
+            <strong id="paseHoraLimite" class="text-red-700">14:18 -05</strong>
+          </div>
+        </div>
+
+        <!-- QR de Retorno / Salida -->
+        <div class="flex flex-col items-center pt-2">
+          <img id="imgPaseQR" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PASE-VIS-2026-9481"
+            class="w-24 h-24 border p-1 rounded" />
+          <span class="text-[9px] text-gray-500 mt-1">Escanee al registrar la salida en Prevención</span>
+        </div>
+
+        <div class="text-center text-[8px] text-gray-500 pt-1 border-t">
+          * Portar visiblemente en todo momento. Sujeto a inspección militar.
+        </div>
+      </div>
+
+      <div class="p-3 bg-gray-100 flex gap-2 border-t">
+        <button onclick="window.print()"
+          class="flex-1 py-2 bg-[#3B441F] hover:bg-[#4B5320] text-amber-200 font-bold text-xs rounded border border-[#DAA520] flex items-center justify-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>Imprimir Pase</span>
+        </button>
+        <button onclick="cerrarModalPaseVisita()"
+          class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded font-bold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================== -->
+  <!-- MODAL TÁCTICO: REGISTRO Y ENROLAMIENTO FACIAL  -->
+  <!-- ============================================== -->
+  <div id="modalRegistroFacial"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-2 sm:p-4 font-mono overflow-y-auto">
+    <div
+      class="w-full max-w-2xl bg-[#171912] border-2 border-[#4B5320] rounded-xl shadow-[0_0_50px_rgba(75,83,32,0.4)] overflow-hidden my-auto max-h-[95vh] flex flex-col">
+
+      <!-- Encabezado Militar del Modal -->
+      <div
+        class="bg-[#2E331B] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[#DAA520] flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div>
+            <h3 class="font-bold text-xs sm:text-sm text-amber-200 tracking-wider uppercase">ENROLAMIENTO Y REGISTRO
+              FACIAL BIOMÉTRICO</h3>
+            <p class="text-[9px] text-gray-300 font-sans">DIRECCIÓN DE TELEMÁTICA Y ESTADÍSTICA (DITE-EP) • CONTROL DE
+              ACCESO MILITAR</p>
+          </div>
+        </div>
+        <button type="button" onclick="cerrarModalRegistroFacial()"
+          class="text-gray-400 hover:text-white p-1 rounded hover:bg-[#3B441F] text-lg leading-none">✕</button>
+      </div>
+
+      <form id="formRegistroFacial" onsubmit="guardarRegistroBiometrico(event)"
+        class="p-3 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
+
+        <!-- SECCIÓN 1: CAPTURA DE ROSTRO CON CÁMARA EN VIVO -->
+        <div class="bg-[#1E2215] border border-[#3B441F] rounded-lg p-3">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#2E331B]">
+            <span class="font-bold text-amber-300 text-[11px] flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              1. CAPTURA BIOMÉTRICA DE ROSTRO
+            </span>
+            <span id="regCamBadge"
+              class="text-[10px] px-2 py-0.5 rounded bg-[#2B2B2B] text-amber-300 border border-[#4B5320]">
+              CÁMARA LISTA
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+
+            <!-- Visor Cámara en Vivo -->
+            <div
+              class="relative aspect-[4/3] bg-black rounded-lg overflow-hidden border-2 border-[#4B5320] flex items-center justify-center">
+              <video id="regVideoElement" autoplay playsinline muted class="w-full h-full object-cover"></video>
+              <canvas id="regCanvasOffscreen" class="hidden"></canvas>
+
+              <!-- Retícula Guía de Enrolamiento -->
+              <div
+                class="absolute inset-3 border-2 border-dashed border-[#DAA520]/60 rounded-full pointer-events-none flex items-center justify-center">
+                <span class="text-[8px] text-[#DAA520]/80 uppercase tracking-widest font-mono text-center px-1">CENTRE
+                  EL ROSTRO AQUÍ</span>
+              </div>
+              <div
+                class="absolute top-1 left-1 font-mono text-[8px] bg-black/70 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/40">
+                LIVE SENSOR</div>
+            </div>
+
+            <!-- Preview de la Foto Capturada -->
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <div
+                class="relative w-full aspect-[4/3] bg-[#171912] rounded-lg overflow-hidden border-2 border-dashed border-gray-600 flex items-center justify-center"
+                id="regPreviewBox">
+                <img id="regImgCapturada" class="hidden w-full h-full object-cover" alt="Rostro Capturado">
+                <div id="regPlaceholderTxt" class="text-center p-3 text-gray-500 text-[10px] font-mono">
+                  <svg class="w-8 h-8 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  [NINGÚN ROSTRO CAPTURADO AÚN]<br>Presione "CAPTURAR ROSTRO"
+                </div>
+              </div>
+
+              <!-- Botones de Acción de Cámara -->
+              <div class="w-full flex gap-1.5">
+                <button type="button" onclick="capturarFotoRegistro()"
+                  class="flex-1 py-2 px-3 bg-[#4B5320] hover:bg-[#556B2F] active:bg-[#3B441F] text-amber-200 border border-[#DAA520] font-bold rounded text-xs flex items-center justify-center gap-1 shadow">
+                  <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3" stroke-width="2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  </svg>
+                  <span>CAPTURAR ROSTRO</span>
+                </button>
+                <label
+                  class="cursor-pointer py-2 px-2.5 bg-[#2B2B2B] hover:bg-[#3B441F] text-gray-300 border border-[#4B5320] rounded text-[10px] flex items-center justify-center"
+                  title="Subir foto desde archivo local">
+                  <span>Subir</span>
+                  <input type="file" id="regFileInput" accept="image/*" class="hidden"
+                    onchange="cargarFotoDesdeArchivo(event)">
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: DATOS PERSONALES Y FILIACIÓN MILITAR -->
+        <div class="bg-[#1E2215] border border-[#3B441F] rounded-lg p-3 space-y-2.5">
+          <div class="font-bold text-amber-300 text-[11px] pb-1 border-b border-[#2E331B] flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            2. FILIACIÓN Y DATOS DEL PERSONAL
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+            <!-- Grado Militar -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">GRADO MILITAR *</label>
+              <select id="regGrado" required
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-amber-200 text-xs focus:outline-none">
+                <option value="CRL EP|Coronel EP">Coronel EP (CRL EP)</option>
+                <option value="TTE CRL EP|Teniente Coronel EP">Teniente Coronel EP (TTE CRL EP)</option>
+                <option value="MY EP|Mayor EP">Mayor EP (MY EP)</option>
+                <option value="CAP EP|Capitán EP">Capitán EP (CAP EP)</option>
+                <option value="TTE EP|Teniente EP">Teniente EP (TTE EP)</option>
+                <option value="STTE EP|Subteniente EP">Subteniente EP (STTE EP)</option>
+                <option value="TJS EP|Técnico Jefe Superior EP">Técnico Jefe Superior EP (TJS EP)</option>
+                <option value="TJ EP|Técnico Jefe EP">Técnico Jefe EP (TJ EP)</option>
+                <option value="T1 EP|Técnico 1ra EP">Técnico 1ra EP (T1 EP)</option>
+                <option value="T2 EP|Técnico 2da EP">Técnico 2da EP (T2 EP)</option>
+                <option value="T3 EP|Técnico 3ra EP">Técnico 3ra EP (T3 EP)</option>
+                <option value="SO1 EP|Suboficial 1ra EP">Suboficial 1ra EP (SO1 EP)</option>
+                <option value="SO2 EP|Suboficial 2da EP">Suboficial 2da EP (SO2 EP)</option>
+                <option value="SO3 EP|Suboficial 3ra EP">Suboficial 3ra EP (SO3 EP)</option>
+                <option value="SGT1 SMV|Sargento 1ro SMV">Sargento 1ro SMV</option>
+                <option value="SLD SMV|Soldado SMV">Soldado SMV</option>
+                <option value="CIVIL EP|Personal Civil EP">Personal Civil EP (CIVIL EP)</option>
+                <option value="VISITANTE|Visitante / Particular">Visitante Civil / Proveedor</option>
+              </select>
+            </div>
+
+            <!-- Arma o Especialidad -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">ARMA O ESPECIALIDAD</label>
+              <select id="regArma"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-white text-xs focus:outline-none">
+                <option value="Infantería">Infantería</option>
+                <option value="Artillería">Artillería</option>
+                <option value="Caballería">Caballería</option>
+                <option value="Blindados">Blindados</option>
+                <option value="Ingeniería">Ingeniería</option>
+                <option value="Comunicaciones">Comunicaciones</option>
+                <option value="Material de Guerra">Material de Guerra</option>
+                <option value="Intendencia">Intendencia</option>
+                <option value="Sanidad">Sanidad</option>
+                <option value="Inteligencia">Inteligencia</option>
+                <option value="Administrativo">Administrativo / Civil</option>
+              </select>
+            </div>
+
+            <!-- Apellidos -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">APELLIDOS *</label>
+              <input type="text" id="regApellidos" required placeholder="Ej: FLORES HUAMÁN"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-white text-xs uppercase focus:outline-none">
+            </div>
+
+            <!-- Nombres -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">NOMBRES *</label>
+              <input type="text" id="regNombres" required placeholder="Ej: Marco Antonio"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-white text-xs focus:outline-none">
+            </div>
+
+            <!-- CIP -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">CIP (CÓDIGO MILITAR) *</label>
+              <input type="text" id="regCIP" required placeholder="Ej: 320194812"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-amber-300 font-mono text-xs focus:outline-none">
+            </div>
+
+            <!-- DNI -->
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">DNI (8 DÍGITOS) *</label>
+              <input type="text" id="regDNI" required maxlength="8" placeholder="Ej: 47192834"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-white font-mono text-xs focus:outline-none">
+            </div>
+
+            <!-- Unidad Actual -->
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] text-gray-400 mb-0.5 font-mono">UNIDAD O DEPENDENCIA MILITAR</label>
+              <input type="text" id="regUnidad" placeholder="Ej: Cuartel General del Ejército / DITE"
+                class="w-full bg-[#171912] border border-[#4B5320] focus:border-[#DAA520] rounded p-1.5 text-white text-xs focus:outline-none">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: CLASIFICACIÓN DE ACCESO (LISTA VERDE vs LISTA NEGRA) -->
+        <div class="bg-[#1E2215] border border-[#3B441F] rounded-lg p-3 space-y-2.5">
+          <div
+            class="font-bold text-amber-300 text-[11px] pb-1 border-b border-[#2E331B] flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              3. CLASIFICACIÓN DE CONTROL DE ACCESO *
+            </span>
+            <span class="text-[9px] text-gray-400">SELECCIONE LA CONDICIÓN OPERATIVA</span>
+          </div>
+
+          <!-- Selector Visual en 2 Columnas -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+            <!-- TARJETA LISTA VERDE -->
+            <label id="labelListaVerde"
+              class="cursor-pointer border-2 border-emerald-500 bg-[#2E331B]/80 rounded-lg p-2.5 flex items-start gap-2.5 transition-all">
+              <input type="radio" name="regListaSeguridad" id="radioListaVerde" value="VERDE" checked
+                onchange="cambiarTipoListaSeguridad('VERDE')" class="mt-0.5 text-emerald-500 focus:ring-0">
+              <div class="flex-1">
+                <div class="font-bold text-emerald-400 text-xs flex items-center gap-1">
+                  <span>🟢 LISTA VERDE</span>
+                  <span
+                    class="text-[9px] px-1 bg-emerald-900/60 rounded text-emerald-300 border border-emerald-500/40">AUTORIZADO</span>
+                </div>
+                <p class="text-[10px] text-gray-300 mt-0.5 font-sans">
+                  Acceso concedido a instalaciones militares. Pasa prueba facial sin impedimento.
+                </p>
+              </div>
+            </label>
+
+            <!-- TARJETA LISTA NEGRA -->
+            <label id="labelListaNegra"
+              class="cursor-pointer border border-[#4B5320] bg-[#171912] rounded-lg p-2.5 flex items-start gap-2.5 hover:border-red-500 transition-all">
+              <input type="radio" name="regListaSeguridad" id="radioListaNegra" value="NEGRA"
+                onchange="cambiarTipoListaSeguridad('NEGRA')" class="mt-0.5 text-red-500 focus:ring-0">
+              <div class="flex-1">
+                <div class="font-bold text-red-400 text-xs flex items-center gap-1">
+                  <span>🔴 LISTA NEGRA</span>
+                  <span class="text-[9px] px-1 bg-red-900/60 rounded text-red-300 border border-red-500/40">DENEGADO /
+                    DEFCON 1</span>
+                </div>
+                <p class="text-[10px] text-gray-300 mt-0.5 font-sans">
+                  Impedimento de ingreso. Activa sirena táctica y alerta de captura a Policía Militar (PM 501).
+                </p>
+              </div>
+            </label>
+
+          </div>
+
+          <!-- Opciones adicionales si es Lista Verde -->
+          <div id="panelListaVerdeCampos" class="pt-2 border-t border-[#2E331B] grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="regPorteArma" checked class="rounded text-[#4B5320] focus:ring-0">
+              <label for="regPorteArma" class="text-[10px] text-gray-300">Porte de Arma Reglamentaria Autorizado</label>
+            </div>
+            <div>
+              <input type="text" id="regVehiculo" placeholder="Placa y Vehículo (ej: EP-51029 Toyota Hilux)"
+                class="w-full bg-[#171912] border border-[#4B5320] rounded p-1 text-white text-[11px] focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Campo obligatorio si es Lista Negra -->
+          <div id="panelListaNegraCampos" class="hidden pt-2 border-t border-red-900/40 space-y-1.5">
+            <label class="block text-[10px] text-red-400 font-bold font-mono">
+              MOTIVO DE RESTRICCIÓN / REQUISITORIA / ORDEN JUDICIAL *
+            </label>
+            <input type="text" id="regMotivoRestriccion"
+              placeholder="Ej: ORDEN DE IMPEDIMENTO DE ACCESO E INVESTIGACIÓN IGE EN CURSO"
+              class="w-full bg-[#2B1515] border border-red-600 rounded p-1.5 text-red-200 text-xs focus:outline-none">
+
+            <!-- Presets rápidos -->
+            <div class="flex flex-wrap gap-1 text-[9px] font-mono">
+              <span class="text-gray-400">Presets:</span>
+              <button type="button"
+                onclick="setPresetMotivo('ORDEN DE IMPEDIMENTO DE ACCESO E INVESTIGACIÓN IGE EN CURSO.')"
+                class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-700/50 hover:bg-red-900">IGE</button>
+              <button type="button"
+                onclick="setPresetMotivo('MANDATO DE DETENCIÓN JUDICIAL POR FUERO MILITAR POLICIAL N° 2026-44.')"
+                class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-700/50 hover:bg-red-900">Mandato
+                Judicial</button>
+              <button type="button"
+                onclick="setPresetMotivo('SEPARACIÓN DEFINITIVA Y REVOCATORIA DE CREDENCIALES MILITARES.')"
+                class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-700/50 hover:bg-red-900">Baja
+                Deshonrosa</button>
+              <button type="button"
+                onclick="setPresetMotivo('ALERTA DE CONTRAINTELIGENCIA POR SOSPECHA DE SUPLANTACIÓN.')"
+                class="px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-700/50 hover:bg-red-900">DINTE</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BOTONES DE ACCIÓN DEL FORMULARIO -->
+        <div class="flex gap-2 pt-2 border-t border-[#3B441F] flex-shrink-0">
+          <button type="submit"
+            class="flex-1 py-3 px-4 bg-[#4B5320] hover:bg-[#556B2F] active:bg-[#3B441F] text-amber-200 border-2 border-[#DAA520] font-mono font-bold rounded-lg text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl transition">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <span>GUARDAR EN BASE DE DATOS Y ENROLAR</span>
+          </button>
+          <button type="button" onclick="cerrarModalRegistroFacial()"
+            class="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-mono text-xs rounded-lg transition">
+            CANCELAR
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL / DIALOGO DE CONFIRMACIÓN Y VALIDACIÓN   -->
+  <!-- ============================================== -->
+  <div id="modalConfirmacionEnrolado"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 font-mono">
+    <div
+      class="w-full max-w-md bg-[#171912] border-2 border-[#DAA520] rounded-xl shadow-[0_0_50px_rgba(218,165,32,0.4)] overflow-hidden text-center">
+      <div id="confirmHeaderBanner" class="bg-[#2E331B] text-white p-3 border-b border-[#DAA520]">
+        <div class="text-[10px] text-amber-300 font-bold uppercase tracking-widest">SISTEMA SIPRE-BIO EP</div>
+        <h4 class="text-sm font-bold text-white uppercase" id="confirmTitulo">PERSONAL ENROLADO CON ÉXITO</h4>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <!-- Foto y Datos Resumen -->
+        <div class="flex items-center gap-3 bg-[#1E2215] p-2.5 rounded-lg border border-[#3B441F] text-left">
+          <img id="confirmFotoPreview" src=""
+            class="w-16 h-16 object-cover rounded border-2 border-[#DAA520] flex-shrink-0" alt="Foto">
+          <div class="text-xs space-y-0.5 overflow-hidden">
+            <div id="confirmNombre" class="font-bold text-white truncate">-</div>
+            <div class="text-[10px] text-gray-300 font-mono">
+              CIP: <span id="confirmCIP" class="text-amber-300 font-bold">-</span> | DNI: <span id="confirmDNI"
+                class="text-white">-</span>
+            </div>
+            <div id="confirmListaBadge" class="inline-block text-[9px] px-1.5 py-0.5 rounded font-bold uppercase mt-1">
+              LISTA VERDE
+            </div>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-300 font-sans">
+          El personal ha sido incorporado a la base de datos de Prevención. ¿Desea proceder con la <strong>validación
+            biométrica facial</strong> ahora mismo?
+        </p>
+
+        <!-- Botones -->
+        <div class="flex gap-2 pt-1">
+          <button onclick="validarPersonalRecienEnrolado()"
+            class="flex-1 py-2.5 bg-[#4B5320] hover:bg-[#556B2F] text-amber-200 text-xs font-bold rounded-lg border border-[#DAA520] transition flex items-center justify-center gap-1.5 shadow">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>VALIDAR ACCESO AHORA</span>
+          </button>
+          <button onclick="cerrarModalConfirmacion()"
+            class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded-lg">
+            CERRAR
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts de la Aplicación -->
+  <script>
+    /**
+     * SISTEMA DE CONTROL DE ACCESO MILITAR - EJÃ‰RCITO DEL PERÃš (EP)
+     * MÃ³dulo de LÃ³gica de SimulaciÃ³n y Motores BiomÃ©tricos / Reconocimiento de Voz
+     * DirecciÃ³n de TelemÃ¡tica y EstadÃ­stica (DITE) - Puesto de Control y PrevenciÃ³n
+     */
+
+    class TacticalSoundSynthesizer {
+      constructor() {
+        this.audioCtx = null;
+        this.isMuted = false;
+      }
+
+      init() {
+        if (!this.audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.audioCtx = new AudioContext();
+          }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      }
+
+      playBeep(freq = 880, duration = 0.08, type = 'sine') {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.audioCtx) return;
+
+        try {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + duration);
+        } catch (e) {
+          console.warn("Audio feedback error:", e);
+        }
+      }
+
+      playSuccess() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.audioCtx) return;
+
+        const now = this.audioCtx.currentTime;
+        [587.33, 739.99, 880].forEach((freq, i) => {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.08);
+          gain.gain.setValueAtTime(0.15, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.18);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.2);
+        });
+      }
+
+      playAlert() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.audioCtx) return;
+
+        const now = this.audioCtx.currentTime;
+        for (let i = 0; i < 3; i++) {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now + i * 0.18);
+          osc.frequency.exponentialRampToValueAtTime(140, now + i * 0.18 + 0.14);
+          gain.gain.setValueAtTime(0.2, now + i * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.18 + 0.16);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now + i * 0.18);
+          osc.stop(now + i * 0.18 + 0.17);
+        }
+      }
+
+      playLaserScan() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.audioCtx) return;
+        const now = this.audioCtx.currentTime;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.25);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+    }
+
+    class EPDatabaseService {
+      constructor() {
+        this.personnel = [
+          {
+            id: "EP-01",
+            cip: "318492010",
+            dni: "45892104",
+            grado: "Coronel EP",
+            grado_abreviado: "CRL EP",
+            arma_servicio: "InfanterÃ­a",
+            apellidos: "VÃSQUEZ HUAMÃN",
+            nombres: "Carlos Alberto",
+            unidad_actual: "Comandancia General del EjÃ©rcito (CGE)",
+            cargo: "Jefe de Estado Mayor Operativo",
+            nivel_seguridad: "SECRETO_MILITAR_NIVEL_3",
+            estado_autorizacion: "AUTORIZADO",
+            nivel_alerta: "VERDE_DEFCON_5",
+            foto_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=faces",
+            porte_arma_reglamentaria: {
+              autorizado: true,
+              serie_arma: "PIST-P226-EP-88412",
+              municion_dotacion: "30 tiros 9x19mm"
+            },
+            destino_predeterminado: "Cuartel General del EjÃ©rcito - PabellÃ³n A (EMGE)",
+            vehiculo_autorizado: "EP-41029 (Toyota Hilux 4x4 Verde OTAN)",
+            tipo_pase: "PERMANENTE_OFICIAL_SUPERIOR",
+            observaciones_guardia: "Pase prioritario sin restricciÃ³n horaria. Escolta autorizada."
+          },
+          {
+            id: "EP-02",
+            cip: "409281745",
+            dni: "72948102",
+            grado: "TÃ©cnico 1ra EP",
+            grado_abreviado: "T1 EP",
+            arma_servicio: "Material de Guerra",
+            apellidos: "QUISPE MAMANI",
+            nombres: "Edwin Wilfredo",
+            unidad_actual: "BatallÃ³n de Material de Guerra NÂ° 511",
+            cargo: "Jefe de PolvorÃ­n y Armamento",
+            nivel_seguridad: "CONFIDENCIAL",
+            estado_autorizacion: "AUTORIZADO",
+            nivel_alerta: "VERDE_DEFCON_5",
+            foto_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop&crop=faces",
+            porte_arma_reglamentaria: {
+              autorizado: true,
+              serie_arma: "PIST-GLOCK17-EP-45190",
+              municion_dotacion: "17 tiros 9mm"
+            },
+            destino_predeterminado: "DepÃ³sito General de Pertrechos Militares",
+            vehiculo_autorizado: "EP-89112 (CamiÃ³n TÃ¡ctico Unimog)",
+            tipo_pase: "PERMANENTE_TECNICO",
+            observaciones_guardia: "Verificar sello de comisiÃ³n de servicio en PrevenciÃ³n."
+          },
+          {
+            id: "EP-03",
+            cip: "294817200",
+            dni: "09482711",
+            grado: "Ex-CapitÃ¡n EP (En SituaciÃ³n de Retiro)",
+            grado_abreviado: "CAP EP (R)",
+            arma_servicio: "Comunicaciones",
+            apellidos: "MENDOZA RETAMOZO",
+            nombres: "Jorge Luis",
+            unidad_actual: "Ninguna / Fuera de Cuadro",
+            cargo: "Sin AsignaciÃ³n",
+            nivel_seguridad: "ACCESO_RESTRINGIDO",
+            estado_autorizacion: "DENEGADO_ALERTA_TACTICA",
+            nivel_alerta: "ROJO_INMEDIATO",
+            foto_url: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&h=300&fit=crop&crop=faces",
+            porte_arma_reglamentaria: {
+              autorizado: false,
+              serie_arma: "SIN AUTORIZACIÃ“N",
+              municion_dotacion: "0"
+            },
+            motivo_restriccion: {
+              codigo_incidente: "ORD-JUD-EP-2026-089",
+              descripcion: "ORDEN DE IMPEDIMENTO DE ACCESO A INSTALACIONES MILITARES E INVESTIGACIÃ“N EN CURSO POR INSPECTORÃA GENERAL DEL EJÃ‰RCITO (IGE).",
+              acciones_oficial_guardia: [
+                "Retener documento de identidad o CIP de inmediato.",
+                "Aislar al intervenido en la Sala de PrevenciÃ³n.",
+                "Notificar al Oficial de Guardia y activar CÃ³digo Rojo.",
+                "Comunicar de inmediato al BatallÃ³n de PolicÃ­a Militar NÂ° 501."
+              ],
+              notificar_oficial_guardia: true,
+              prioridad_llamada: "ALTA_INMEDIATA"
+            },
+            destino_predeterminado: "ACCESO PROHIBIDO",
+            tipo_pase: "REVOCADO"
+          },
+          {
+            id: "EP-04",
+            cip: "510928374",
+            dni: "76192834",
+            grado: "Subteniente EP",
+            grado_abreviado: "STTE EP",
+            arma_servicio: "ArtillerÃ­a",
+            apellidos: "FLORES SALAZAR",
+            nombres: "Valeria Andrea",
+            unidad_actual: "Grupo de ArtillerÃ­a de CampaÃ±a NÂ° 115",
+            cargo: "Comandante de BaterÃ­a de Fuegos",
+            nivel_seguridad: "SECRETO_MILITAR_NIVEL_2",
+            estado_autorizacion: "AUTORIZADO",
+            nivel_alerta: "VERDE_DEFCON_5",
+            foto_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop&crop=faces",
+            porte_arma_reglamentaria: {
+              autorizado: true,
+              serie_arma: "PIST-BERETTA-EP-3109",
+              municion_dotacion: "15 tiros 9mm"
+            },
+            destino_predeterminado: "PolÃ­gono de Tiro y PrevenciÃ³n Sur",
+            vehiculo_autorizado: "Particular / A pie",
+            tipo_pase: "OFICIAL_SUBALTERNO",
+            observaciones_guardia: "Presentación ordinaria de servicio matutino."
+          }
+        ];
+
+        this.accessLogs = [];
+        this.initCustomStorage();
+      }
+
+      initCustomStorage() {
+        try {
+          const saved = localStorage.getItem('sipre_bio_custom_personnel');
+          if (saved) {
+            const list = JSON.parse(saved);
+            if (Array.isArray(list) && list.length > 0) {
+              // Incorporar personal registrado previamente
+              this.personnel = [...list, ...this.personnel];
+            }
+          }
+        } catch (e) {
+          console.warn("No se pudo cargar personal personalizado desde LocalStorage:", e);
+        }
+      }
+
+      saveCustomPersonnel(person) {
+        if (!person.id) {
+          person.id = "EP-BIO-" + Date.now().toString().slice(-5);
+        }
+        // Agregar a la lista en memoria al inicio
+        this.personnel.unshift(person);
+
+        try {
+          const saved = localStorage.getItem('sipre_bio_custom_personnel');
+          let list = saved ? JSON.parse(saved) : [];
+          if (!Array.isArray(list)) list = [];
+          list.unshift(person);
+          localStorage.setItem('sipre_bio_custom_personnel', JSON.stringify(list));
+        } catch (e) {
+          console.warn("No se pudo persistir en LocalStorage:", e);
+        }
+        return person;
+      }
+
+      deleteCustomPersonnel(id) {
+        this.personnel = this.personnel.filter(p => p.id !== id);
+        try {
+          const saved = localStorage.getItem('sipre_bio_custom_personnel');
+          if (saved) {
+            let list = JSON.parse(saved);
+            if (Array.isArray(list)) {
+              list = list.filter(p => p.id !== id);
+              localStorage.setItem('sipre_bio_custom_personnel', JSON.stringify(list));
+            }
+          }
+        } catch (e) {
+          console.warn("Error eliminando personal:", e);
+        }
+      }
+
+      findByCIP(cip) {
+        if (!cip) return null;
+        return this.personnel.find(p => p.cip && p.cip.trim() === cip.trim());
+      }
+
+      findByDNI(dni) {
+        if (!dni) return null;
+        return this.personnel.find(p => p.dni && p.dni.trim() === dni.trim());
+      }
+
+      search(term) {
+        if (!term) return [];
+        const q = term.trim().toLowerCase();
+        return this.personnel.filter(p =>
+          (p.cip && p.cip.toLowerCase().includes(q)) ||
+          (p.dni && p.dni.toLowerCase().includes(q)) ||
+          (p.apellidos && p.apellidos.toLowerCase().includes(q)) ||
+          (p.nombres && p.nombres.toLowerCase().includes(q)) ||
+          (p.vehiculo_autorizado && p.vehiculo_autorizado.toLowerCase().includes(q)) ||
+          (p.grado_abreviado && p.grado_abreviado.toLowerCase().includes(q))
+        );
+      }
+
+      logAccess(record) {
+        const logEntry = {
+          id: "LOG-" + Date.now().toString().slice(-6),
+          timestamp: new Date().toLocaleTimeString('es-PE', { hour12: false }),
+          fecha: new Date().toLocaleDateString('es-PE'),
+          ...record
+        };
+        this.accessLogs.unshift(logEntry);
+        return logEntry;
+      }
+    }
+
+    /**
+     * MOTOR DE RECONOCIMIENTO FACIAL Y DETECCIÃ“N DE VIDA (LIVENESS)
+     */
+    class FacialLivenessEngine {
+      constructor(canvasElement, statusElement, onStateChange) {
+        this.canvas = canvasElement;
+        this.ctx = canvasElement.getContext('2d');
+        this.statusElem = statusElement;
+        this.onStateChange = onStateChange;
+        this.isScanning = false;
+        this.animationFrameId = null;
+        this.simulatedFaceAngles = { pitch: 0, yaw: 0, roll: 0 };
+        this.scanProgress = 0;
+        this.livenessChecks = {
+          faceDetected: false,
+          blinkDetected: false,
+          headTurnDetected: false,
+          antiSpoofPassed: false
+        };
+      }
+
+      startSimulation(personTarget, onComplete) {
+        if (this.isScanning) return;
+        this.isScanning = true;
+        this.scanProgress = 0;
+        this.livenessChecks = {
+          faceDetected: false,
+          blinkDetected: false,
+          headTurnDetected: false,
+          antiSpoofPassed: false
+        };
+
+        const startTime = performance.now();
+        const duration = 3200; // 3.2s comprehensive scan
+
+        const runLoop = (now) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(100, Math.floor((elapsed / duration) * 100));
+          this.scanProgress = progress;
+
+          // Update tactical status states as specified
+          if (progress < 40) {
+            this.updateStatus("[ESCANEANDO ROSTRO ENCUADRADO...]", "amber");
+            this.livenessChecks.faceDetected = true;
+          } else if (progress < 70) {
+            this.updateStatus("[PRUEBA DE VIDA: PARPADEO Y GIRO CONFIRMADO]", "blue");
+            this.livenessChecks.blinkDetected = true;
+            this.livenessChecks.headTurnDetected = true;
+          } else if (progress < 90) {
+            this.updateStatus("[VERIFICANDO EN BASE DE DATOS EP (DITE)...]", "yellow");
+            this.livenessChecks.antiSpoofPassed = true;
+          } else {
+            const isAuth = personTarget.estado_autorizacion === "AUTORIZADO";
+            this.updateStatus(
+              isAuth ? "[ACCESO CONCEDIDO: IDENTIDAD MILITAR VALIDADA]" : "[ALERTA: ACCESO DENEGADO / IMPEDIMENTO]",
+              isAuth ? "green" : "red"
+            );
+          }
+
+          this.renderTacticalHUD(progress, personTarget);
+
+          if (progress < 100 && this.isScanning) {
+            this.animationFrameId = requestAnimationFrame(runLoop);
+          } else {
+            this.isScanning = false;
+            if (onComplete) {
+              onComplete({
+                success: personTarget.estado_autorizacion === "AUTORIZADO",
+                person: personTarget,
+                livenessScore: 0.988,
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
+        };
+
+        this.animationFrameId = requestAnimationFrame(runLoop);
+      }
+
+      stop() {
+        this.isScanning = false;
+        if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+        }
+      }
+
+      updateStatus(text, colorKey) {
+        if (this.statusElem) {
+          this.statusElem.innerText = text;
+          this.statusElem.dataset.statusColor = colorKey;
+        }
+        if (this.onStateChange) {
+          this.onStateChange(text, colorKey);
+        }
+      }
+
+      renderTacticalHUD(progress, personTarget) {
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const ctx = this.ctx;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Oval Guide Center Dimensions
+        const cx = width / 2;
+        const cy = height / 2 - 10;
+        const rx = width * 0.28;
+        const ry = height * 0.38;
+
+        // Tactical Oval Guide Lines
+        ctx.save();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = progress > 85 ? (personTarget.estado_autorizacion === "AUTORIZADO" ? "#4CAF50" : "#B71C1C") : "#4ade80";
+        ctx.setLineDash([12, 6]);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Military Corner Reticles
+        const boxMargin = 30;
+        const cornerSize = 25;
+        ctx.save();
+        ctx.strokeStyle = "#DAA520"; // Military Amber / Gold
+        ctx.lineWidth = 2;
+
+        // Top-Left
+        ctx.beginPath();
+        ctx.moveTo(boxMargin, boxMargin + cornerSize);
+        ctx.lineTo(boxMargin, boxMargin);
+        ctx.lineTo(boxMargin + cornerSize, boxMargin);
+        ctx.stroke();
+
+        // Top-Right
+        ctx.beginPath();
+        ctx.moveTo(width - boxMargin - cornerSize, boxMargin);
+        ctx.lineTo(width - boxMargin, boxMargin);
+        ctx.lineTo(width - boxMargin, boxMargin + cornerSize);
+        ctx.stroke();
+
+        // Bottom-Left
+        ctx.beginPath();
+        ctx.moveTo(boxMargin, height - boxMargin - cornerSize);
+        ctx.lineTo(boxMargin, height - boxMargin);
+        ctx.lineTo(boxMargin + cornerSize, height - boxMargin);
+        ctx.stroke();
+
+        // Bottom-Right
+        ctx.beginPath();
+        ctx.moveTo(width - boxMargin - cornerSize, height - boxMargin);
+        ctx.lineTo(width - boxMargin, height - boxMargin);
+        ctx.lineTo(width - boxMargin, height - boxMargin - cornerSize);
+        ctx.stroke();
+        ctx.restore();
+
+        // Dynamic Vertical Laser Scan Line
+        const scanY = cy - ry + ((progress % 50) / 50) * (ry * 2);
+        ctx.save();
+        const grad = ctx.createLinearGradient(cx - rx, scanY, cx + rx, scanY);
+        grad.addColorStop(0, "rgba(74, 222, 128, 0)");
+        grad.addColorStop(0.5, "rgba(74, 222, 128, 0.85)");
+        grad.addColorStop(1, "rgba(74, 222, 128, 0)");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx - rx * 0.9, scanY);
+        ctx.lineTo(cx + rx * 0.9, scanY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Face Vector Feature Points (Landmarks)
+        if (progress > 20) {
+          ctx.save();
+          ctx.fillStyle = "#86efac";
+          const landmarks = [
+            { x: cx - 35, y: cy - 25 }, // Left eye
+            { x: cx + 35, y: cy - 25 }, // Right eye
+            { x: cx, y: cy + 10 },      // Nose tip
+            { x: cx - 24, y: cy + 50 }, // Mouth left
+            { x: cx + 24, y: cy + 50 }, // Mouth right
+            { x: cx, y: cy + 55 },      // Chin
+            { x: cx - 55, y: cy - 40 }, // Left brow
+            { x: cx + 55, y: cy - 40 }, // Right brow
+          ];
+          landmarks.forEach(pt => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+
+        // Telemetry text overlay in HUD
+        ctx.save();
+        ctx.font = "10px 'Roboto Mono', monospace";
+        ctx.fillStyle = "#DAA520";
+        ctx.fillText(`FPS: 30.0 | LIVENESS: ${progress > 50 ? 'PASS (0.98)' : 'EVALUATING'}`, boxMargin + 4, boxMargin + 16);
+        ctx.fillText(`SENSOR: IR/RGB-OPTICAL | PUESTO: GARITA-01`, boxMargin + 4, height - boxMargin - 8);
+        ctx.restore();
+      }
+    }
+
+    /**
+     * MOTOR DE RECONOCIMIENTO DACTILAR
+     */
+    class BiometricFingerprintEngine {
+      constructor(canvasElement, onStateUpdate) {
+        this.canvas = canvasElement;
+        this.ctx = canvasElement.getContext('2d');
+        this.onStateUpdate = onStateUpdate;
+        this.isScanning = false;
+      }
+
+      drawFingerprint(scanYPercent = 0, isMatch = null) {
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, width, height);
+
+        const cx = width / 2;
+        const cy = height / 2;
+
+        // Draw fingerprint ridges (elliptical concentric arcs)
+        ctx.save();
+        let ridgeColor = "#4ade80"; // Neon tactical green
+        if (isMatch === true) ridgeColor = "#22c55e";
+        if (isMatch === false) ridgeColor = "#ef4444";
+
+        ctx.strokeStyle = ridgeColor;
+        ctx.lineWidth = 3.2;
+        ctx.lineCap = "round";
+
+        const rings = 12;
+        for (let i = 1; i <= rings; i++) {
+          const rx = i * 9.5;
+          const ry = i * 15;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, ry, 0, 0.25 * Math.PI, 1.75 * Math.PI);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 5, rx * 0.9, ry * 0.9, 0, -0.2 * Math.PI, 0.4 * Math.PI);
+          ctx.stroke();
+        }
+
+        // Laser bar
+        if (scanYPercent > 0 && scanYPercent < 100) {
+          const laserY = (height * scanYPercent) / 100;
+          const laserGrad = ctx.createLinearGradient(0, laserY, width, laserY);
+          laserGrad.addColorStop(0, "rgba(218, 165, 32, 0)");
+          laserGrad.addColorStop(0.5, "rgba(218, 165, 32, 1)");
+          laserGrad.addColorStop(1, "rgba(218, 165, 32, 0)");
+          ctx.strokeStyle = laserGrad;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(10, laserY);
+          ctx.lineTo(width - 10, laserY);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      scanAndMatch(personTarget, onComplete) {
+        if (this.isScanning) return;
+        this.isScanning = true;
+
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 4;
+          this.drawFingerprint(progress, null);
+
+          if (progress < 40) {
+            this.onStateUpdate("[COLOCAR DEDO FIRME EN SENSOR...]", "amber", progress);
+          } else if (progress < 80) {
+            this.onStateUpdate("[EXTRAYENDO MINUCIAS BIOMÃ‰TRICAS (WSQ)...]", "blue", progress);
+          } else {
+            this.onStateUpdate("[COTEJANDO CON AFIS / BASE DE DATOS EP...]", "yellow", progress);
+          }
+
+          if (progress >= 100) {
+            clearInterval(interval);
+            this.isScanning = false;
+            const isAuth = personTarget.estado_autorizacion === "AUTORIZADO";
+            this.drawFingerprint(0, isAuth);
+            this.onStateUpdate(
+              isAuth ? "[HUELLA DACTILAR VERIFICADA Y CONFORME]" : "[ALERTA: HUELLA REGISTRA IMPEDIMENTO / NO MATCH]",
+              isAuth ? "green" : "red",
+              100
+            );
+            if (onComplete) {
+              onComplete({
+                success: isAuth,
+                person: personTarget,
+                nfiqQuality: 88,
+                minutiaeCount: 54
+              });
+            }
+          }
+        }, 45);
+      }
+    }
+
+    /**
+     * MOTOR DE REGISTRO DE VISITAS POR COMANDO DE VOZ (STT)
+     * Adaptado a jerga militar peruana y dependencias del EjÃ©rcito del PerÃº
+     */
+    class MilitaryVoiceSTTEngine {
+      constructor(onResultCallback, onStateCallback) {
+        this.onResult = onResultCallback;
+        this.onState = onStateCallback;
+        this.isListening = false;
+        this.recognition = null;
+
+        // Diccionario militar peruano para correcciÃ³n y autocompletado inteligente
+        this.militaryDictionary = [
+          { trigger: /pentagonito|cuartel general/i, value: "Cuartel General del EjÃ©rcito (Pentagonito)" },
+          { trigger: /coede|educaci[oÃ³]n y doctrina/i, value: "Comandancia de EducaciÃ³n y Doctrina del EjÃ©rcito (COEDE)" },
+          { trigger: /comandancia general|cge/i, value: "Comandancia General del EjÃ©rcito (CGE)" },
+          { trigger: /estado mayor|emge/i, value: "Estado Mayor General del EjÃ©rcito (EMGE)" },
+          { trigger: /inspector[iÃ­]a|ige/i, value: "InspecciÃ³n General del EjÃ©rcito (IGE)" },
+          { trigger: /inteligencia|dinte/i, value: "DirecciÃ³n de Inteligencia del EjÃ©rcito (DINTE)" },
+          { trigger: /telem[aÃ¡]tica|dite/i, value: "DirecciÃ³n de TelemÃ¡tica y EstadÃ­stica (DITE)" },
+          { trigger: /log[iÃ­]stica|diloge/i, value: "DirecciÃ³n de LogÃ­stica del EjÃ©rcito (DILOGE)" },
+          { trigger: /sanidad|cosale|hospital militar/i, value: "Comando de Salud del EjÃ©rcito (COSALE)" },
+          { trigger: /escuela militar|emch/i, value: "Escuela Militar de Chorrillos (EMCH)" },
+          { trigger: /escuela t[eÃ©]cnica|ete/i, value: "Escuela TÃ©cnica del EjÃ©rcito (ETE)" },
+          { trigger: /pabell[oÃ³]n de oficiales/i, value: "PabellÃ³n de Oficiales Generales" },
+          { trigger: /polic[iÃ­]a militar|pm/i, value: "BatallÃ³n de PolicÃ­a Militar NÂ° 501" },
+          { trigger: /policl[iÃ­]nico/i, value: "PoliclÃ­nico Militar de Chorrillos" }
+        ];
+
+        this.initSpeechAPI();
+      }
+
+      initSpeechAPI() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          this.recognition = new SpeechRecognition();
+          this.recognition.lang = 'es-PE';
+          this.recognition.continuous = false;
+          this.recognition.interimResults = true;
+
+          this.recognition.onstart = () => {
+            this.isListening = true;
+            this.onState("ESCUCHANDO COMANDO DE VOZ...", true);
+          };
+
+          this.recognition.onresult = (event) => {
+            let transcript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+            }
+            const normalized = this.enrichMilitaryTerms(transcript);
+            this.onResult(transcript, normalized, event.results[0].isFinal);
+          };
+
+          this.recognition.onerror = (event) => {
+            console.warn("Speech recognition error:", event.error);
+            this.isListening = false;
+            this.onState("MICRÃ“FONO INACTIVO / ERROR", false);
+          };
+
+          this.recognition.onend = () => {
+            this.isListening = false;
+            this.onState("MICRÃ“FONO EN ESPERA", false);
+          };
+        } else {
+          console.warn("Web Speech API no disponible en este navegador. Se usarÃ¡ el emulador tÃ¡ctico.");
+        }
+      }
+
+      enrichMilitaryTerms(rawText) {
+        let enriched = rawText;
+        for (const item of this.militaryDictionary) {
+          if (item.trigger.test(rawText)) {
+            return item.value;
+          }
+        }
+        return enriched;
+      }
+
+      startListening() {
+        if (this.recognition) {
+          try {
+            this.recognition.start();
+          } catch (e) {
+            console.warn("Ya estaba escuchando:", e);
+          }
+        } else {
+          // SimulaciÃ³n automÃ¡tica tÃ¡ctica con presets militares
+          this.simulateSpeechPreset("DirigiÃ©ndose a la Comandancia de EducaciÃ³n y Doctrina - COEDE para reuniÃ³n con Oficial de PrevenciÃ³n");
+        }
+      }
+
+      stopListening() {
+        if (this.recognition && this.isListening) {
+          this.recognition.stop();
+        }
+        this.isListening = false;
+        this.onState("MICRÃ“FONO DETENIDO", false);
+      }
+
+      simulateSpeechPreset(text) {
+        this.isListening = true;
+        this.onState("SIMULANDO CAPTURA DE VOZ TÃCTICA...", true);
+        let current = "";
+        const words = text.split(" ");
+        let index = 0;
+
+        const timer = setInterval(() => {
+          if (index < words.length) {
+            current += (index > 0 ? " " : "") + words[index];
+            const enriched = this.enrichMilitaryTerms(current);
+            this.onResult(current, enriched, false);
+            index++;
+          } else {
+            clearInterval(timer);
+            this.isListening = false;
+            const finalEnriched = this.enrichMilitaryTerms(current);
+            this.onResult(current, finalEnriched, true);
+            this.onState("TRANSCRIPCIÃ“N COMPLETADA", false);
+          }
+        }, 180);
+      }
+    }
+
+    // ExportaciÃ³n global para scripts y mÃ³dulos
+    window.TacticalSoundSynthesizer = TacticalSoundSynthesizer;
+    window.EPDatabaseService = EPDatabaseService;
+    window.FacialLivenessEngine = FacialLivenessEngine;
+    window.BiometricFingerprintEngine = BiometricFingerprintEngine;
+    window.MilitaryVoiceSTTEngine = MilitaryVoiceSTTEngine;
+
+
+  </script>
+  <script>
+    // InicializaciÃ³n del Sistema TÃ¡ctico
+    let soundSynth = new TacticalSoundSynthesizer();
+    let dbService = new EPDatabaseService();
+    let facialEngine = null;
+    let fingerprintEngine = null;
+    let voiceEngine = null;
+
+    let perfilSeleccionado = dbService.personnel[0]; // VÃ¡squez por defecto
+    let streamWebcam = null;
+
+    // Reloj TÃ¡ctico
+    function actualizarReloj() {
+      const now = new Date();
+      const horas = String(now.getHours()).padStart(2, '0');
+      const minutos = String(now.getMinutes()).padStart(2, '0');
+      const segundos = String(now.getSeconds()).padStart(2, '0');
+      const elem = document.getElementById('relojMilitar');
+      if (elem) elem.innerText = `${horas}:${minutos}:${segundos} -05`;
+    }
+    setInterval(actualizarReloj, 1000);
+    actualizarReloj();
+
+    // Manejo de Audio
+    function toggleAudioTactico() {
+      soundSynth.isMuted = !soundSynth.isMuted;
+      document.getElementById('iconAudioOn').classList.toggle('hidden', soundSynth.isMuted);
+      document.getElementById('iconAudioOff').classList.toggle('hidden', !soundSynth.isMuted);
+    }
+
+    // InicializaciÃ³n tras cargar DOM
+    // ========================================================
+    // GESTIÓN DINÁMICA DE PERFILES Y REGISTRO BIOMÉTRICO
+    // ========================================================
+    let regStream = null;
+    let regFotoCapturadaDataUrl = null;
+    let idPersonalRecienEnrolado = null;
+
+    // Renderizar barra superior de perfiles (Precargados + Enrolados con cámara)
+    function renderizarBarraPerfiles() {
+      const contenedor = document.getElementById('contenedorPerfilesMilitares');
+      if (!contenedor) return;
+      contenedor.innerHTML = '';
+
+      dbService.personnel.forEach(p => {
+        const isCurrent = perfilSeleccionado && perfilSeleccionado.id === p.id;
+        const isAuth = p.estado_autorizacion === "AUTORIZADO";
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.cip = p.cip;
+        btn.className = `btn-perfil px-2.5 py-1 rounded border transition whitespace-nowrap text-xs font-mono flex items-center gap-1.5 ${isCurrent
+            ? 'bg-[#3B441F] text-white border-[#DAA520] shadow-md ring-1 ring-[#DAA520]'
+            : isAuth
+              ? 'bg-[#2B2B2B] text-gray-300 hover:text-white border-[#3B441F]'
+              : 'bg-[#B71C1C]/40 text-red-200 hover:bg-[#B71C1C] border-red-500/50'
+          }`;
+        btn.onclick = () => seleccionarPerfilMilitar(p.id);
+
+        const badgeDot = isAuth
+          ? '<span class="w-2 h-2 rounded-full bg-emerald-400"></span>'
+          : '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>';
+
+        const primerApellido = (p.apellidos || '').split(' ')[0];
+        const etiquetaLista = isAuth ? 'Verde' : 'Negra';
+
+        btn.innerHTML = `
+          ${badgeDot}
+          <span>${p.grado_abreviado || ''} ${primerApellido}</span>
+          <span class="text-[9px] opacity-75">(${etiquetaLista})</span>
+        `;
+        contenedor.appendChild(btn);
+      });
+    }
+
+    // Búsqueda Rápida Táctica por CIP / DNI / Apellidos / Placa
+    function buscarPersonalMilitar() {
+      const input = document.getElementById('inputBusquedaCIP');
+      if (!input) return;
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        alert("Por favor ingrese un CIP, DNI, Apellidos o Placa.");
+        return;
+      }
+
+      const encontrados = dbService.search(q);
+      if (encontrados.length > 0) {
+        const target = encontrados[0];
+        soundSynth.playSuccess();
+        seleccionarPerfilMilitar(target.id);
+        const esVerde = target.estado_autorizacion === "AUTORIZADO";
+        alert(`✓ PERSONAL ENCONTRADO EN BASE DE DATOS DITE:\n${target.grado_abreviado} ${target.apellidos}, ${target.nombres}\nCIP: ${target.cip} | DNI: ${target.dni}\nCLASIFICACIÓN: ${esVerde ? 'LISTA VERDE (AUTORIZADO)' : 'LISTA NEGRA (DENEGADO / DEFCON 1)'}`);
+      } else {
+        soundSynth.playAlert();
+        if (confirm(`No se encontró registro para "${q}" en la Base de Datos.\n¿Desea registrar y enrolar a esta persona ahora con la cámara?`)) {
+          abrirModalRegistroFacial();
+          if (/^\d{8}$/.test(q)) {
+            document.getElementById('regDNI').value = q;
+          } else if (/^\d{9}$/.test(q)) {
+            document.getElementById('regCIP').value = q;
+          }
+        }
+      }
+    }
+
+    // Modal de Registro Facial con Cámara
+    async function abrirModalRegistroFacial() {
+      soundSynth.playBeep(700, 0.05);
+      const modal = document.getElementById('modalRegistroFacial');
+      modal.classList.remove('hidden');
+
+      // Limpiar preview anterior
+      regFotoCapturadaDataUrl = null;
+      document.getElementById('regImgCapturada').classList.add('hidden');
+      document.getElementById('regPlaceholderTxt').classList.remove('hidden');
+      document.getElementById('regCamBadge').innerText = "CÁMARA INICIANDO...";
+
+      const regVid = document.getElementById('regVideoElement');
+
+      // Si el stream principal ya existe y está activo, reusarlo
+      if (streamWebcam && streamWebcam.active) {
+        regVid.srcObject = streamWebcam;
+        regStream = streamWebcam;
+        document.getElementById('regCamBadge').innerText = "SENSOR REAL EN LÍNEA";
+      } else {
+        try {
+          regStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+          regVid.srcObject = regStream;
+          document.getElementById('regCamBadge').innerText = "SENSOR REAL EN LÍNEA";
+        } catch (err) {
+          console.warn("No se pudo acceder a la cámara web física:", err);
+          document.getElementById('regCamBadge').innerText = "MODO SIMULADOR / SUBIR";
+        }
+      }
+    }
+
+    function cerrarModalRegistroFacial() {
+      soundSynth.playBeep(500, 0.04);
+      const modal = document.getElementById('modalRegistroFacial');
+      modal.classList.add('hidden');
+
+      // Si abrimos un stream independiente solo para el modal, detenerlo
+      if (regStream && regStream !== streamWebcam) {
+        regStream.getTracks().forEach(track => track.stop());
+        regStream = null;
+      }
+    }
+
+    // Captura instantánea desde el feed de video
+    function capturarFotoRegistro() {
+      const regVid = document.getElementById('regVideoElement');
+      const canvas = document.getElementById('regCanvasOffscreen');
+      const ctx = canvas.getContext('2d');
+      const imgPreview = document.getElementById('regImgCapturada');
+      const placeholder = document.getElementById('regPlaceholderTxt');
+      const badge = document.getElementById('regCamBadge');
+
+      canvas.width = 320;
+      canvas.height = 240;
+
+      if (regVid && regVid.videoWidth > 0 && regVid.srcObject) {
+        // Captura directa de la cámara real
+        ctx.drawImage(regVid, 0, 0, canvas.width, canvas.height);
+      } else {
+        // Generador biométrico sintético táctico si no hay cámara física conectada
+        ctx.fillStyle = "#1E2215";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Silueta facial táctica
+        ctx.fillStyle = "#2E331B";
+        ctx.beginPath();
+        ctx.ellipse(160, 110, 55, 75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(160, 210, 85, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Retícula HUD Militar
+        ctx.strokeStyle = "#DAA520";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, 20, 240, 200);
+        ctx.fillStyle = "#DAA520";
+        ctx.font = "10px monospace";
+        ctx.fillText("FACIAL ID CAPTURED [LIVE-OPTICAL]", 50, 40);
+        ctx.fillText(new Date().toISOString(), 50, 210);
+      }
+
+      regFotoCapturadaDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      imgPreview.src = regFotoCapturadaDataUrl;
+      imgPreview.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      badge.innerText = "ROSTRO CAPTURADO (CONFORME ✓)";
+      badge.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500";
+      soundSynth.playSuccess();
+    }
+
+    function cargarFotoDesdeArchivo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        regFotoCapturadaDataUrl = e.target.result;
+        const imgPreview = document.getElementById('regImgCapturada');
+        const placeholder = document.getElementById('regPlaceholderTxt');
+        const badge = document.getElementById('regCamBadge');
+
+        imgPreview.src = regFotoCapturadaDataUrl;
+        imgPreview.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        badge.innerText = "FOTO CARGADA ✓";
+        badge.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500";
+        soundSynth.playSuccess();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function cambiarTipoListaSeguridad(tipo) {
+      soundSynth.playBeep(650, 0.05);
+      const isVerde = tipo === 'VERDE';
+
+      const labelVerde = document.getElementById('labelListaVerde');
+      const labelNegra = document.getElementById('labelListaNegra');
+      const panelVerde = document.getElementById('panelListaVerdeCampos');
+      const panelNegra = document.getElementById('panelListaNegraCampos');
+
+      if (isVerde) {
+        labelVerde.className = "cursor-pointer border-2 border-emerald-500 bg-[#2E331B]/80 rounded-lg p-2.5 flex items-start gap-2.5 transition-all";
+        labelNegra.className = "cursor-pointer border border-[#4B5320] bg-[#171912] rounded-lg p-2.5 flex items-start gap-2.5 hover:border-red-500 transition-all";
+        panelVerde.classList.remove('hidden');
+        panelNegra.classList.add('hidden');
+      } else {
+        labelNegra.className = "cursor-pointer border-2 border-red-500 bg-[#2B1515] rounded-lg p-2.5 flex items-start gap-2.5 transition-all";
+        labelVerde.className = "cursor-pointer border border-[#4B5320] bg-[#171912] rounded-lg p-2.5 flex items-start gap-2.5 hover:border-emerald-500 transition-all";
+        panelVerde.classList.add('hidden');
+        panelNegra.classList.remove('hidden');
+      }
+    }
+
+    function setPresetMotivo(texto) {
+      soundSynth.playBeep(700, 0.04);
+      document.getElementById('regMotivoRestriccion').value = texto;
+    }
+
+    // Guardar nuevo registro en la Base de Datos Militar
+    function guardarRegistroBiometrico(event) {
+      event.preventDefault();
+
+      // Asegurar que haya foto
+      if (!regFotoCapturadaDataUrl) {
+        capturarFotoRegistro();
+      }
+
+      const gradoVal = document.getElementById('regGrado').value.split('|');
+      const gradoAbrev = gradoVal[0];
+      const gradoNombre = gradoVal[1] || gradoAbrev;
+
+      const arma = document.getElementById('regArma').value;
+      const apellidos = document.getElementById('regApellidos').value.trim().toUpperCase();
+      const nombres = document.getElementById('regNombres').value.trim();
+      const cip = document.getElementById('regCIP').value.trim();
+      const dni = document.getElementById('regDNI').value.trim();
+      const unidad = document.getElementById('regUnidad').value.trim() || "Cuartel General del Ejército";
+
+      const esListaVerde = document.getElementById('radioListaVerde').checked;
+      const porteArmaChecked = document.getElementById('regPorteArma').checked;
+      const vehiculo = document.getElementById('regVehiculo').value.trim() || (esListaVerde ? "Particular" : "Sin Vehículo");
+      const motivoRestriccion = document.getElementById('regMotivoRestriccion').value.trim() || "ORDEN DE IMPEDIMENTO DE ACCESO E INVESTIGACIÓN IGE EN CURSO.";
+
+      const nuevoPersonal = {
+        id: "EP-BIO-" + Date.now().toString().slice(-5),
+        cip: cip,
+        dni: dni,
+        grado: gradoNombre,
+        grado_abreviado: gradoAbrev,
+        arma_servicio: arma,
+        apellidos: apellidos,
+        nombres: nombres,
+        unidad_actual: unidad,
+        cargo: esListaVerde ? "Oficial / Efectivo en Servicio" : "Sujeto a Intervención Inmediata",
+        nivel_seguridad: esListaVerde ? "SECRETO_MILITAR_NIVEL_2" : "ACCESO_RESTRINGIDO_DEFCON_1",
+        estado_autorizacion: esListaVerde ? "AUTORIZADO" : "DENEGADO_ALERTA_TACTICA",
+        nivel_alerta: esListaVerde ? "VERDE_DEFCON_5" : "ROJO_INMEDIATO",
+        foto_url: regFotoCapturadaDataUrl,
+        porte_arma_reglamentaria: {
+          autorizado: esListaVerde && porteArmaChecked,
+          serie_arma: (esListaVerde && porteArmaChecked) ? "PIST-P226-EP-" + cip.slice(-4) : "SIN AUTORIZACIÓN",
+          municion_dotacion: (esListaVerde && porteArmaChecked) ? "30 tiros 9x19mm" : "0"
+        },
+        destino_predeterminado: esListaVerde ? unidad : "ACCESO PROHIBIDO",
+        vehiculo_autorizado: vehiculo,
+        tipo_pase: esListaVerde ? "PERMANENTE_BIOMETRICO_EP" : "REVOCADO",
+        motivo_restriccion: !esListaVerde ? {
+          codigo_incidente: "ORD-JUD-EP-" + Date.now().toString().slice(-4),
+          descripcion: motivoRestriccion,
+          acciones_oficial_guardia: [
+            "Retener documento de identidad o CIP de inmediato.",
+            "Aislar al intervenido en la Sala de Prevención.",
+            "Notificar al Oficial de Guardia y activar Código Rojo.",
+            "Comunicar de inmediato al Batallón de Policía Militar N° 501."
+          ],
+          notificar_oficial_guardia: true,
+          prioridad_llamada: "ALTA_INMEDIATA"
+        } : null,
+        observaciones_guardia: `Enrolado por escáner de rostro en Garita (${new Date().toLocaleTimeString('es-PE')}).`
+      };
+
+      // Guardar en servicio de BD y localStorage
+      dbService.saveCustomPersonnel(nuevoPersonal);
+      idPersonalRecienEnrolado = nuevoPersonal.id;
+
+      // Refrescar barra superior y seleccionar al nuevo efectivo
+      renderizarBarraPerfiles();
+      seleccionarPerfilMilitar(nuevoPersonal.id);
+
+      // Cerrar modal de registro y abrir modal de validación inmediata
+      cerrarModalRegistroFacial();
+      mostrarModalConfirmacion(nuevoPersonal);
+    }
+
+    function mostrarModalConfirmacion(p) {
+      soundSynth.playSuccess();
+      const esVerde = p.estado_autorizacion === "AUTORIZADO";
+
+      document.getElementById('confirmTitulo').innerText = esVerde ? "PERSONAL ENROLADO [LISTA VERDE]" : "PERSONAL REGISTRADO [LISTA NEGRA]";
+      document.getElementById('confirmHeaderBanner').className = esVerde
+        ? "bg-[#2E331B] text-white p-3 border-b-2 border-emerald-500"
+        : "bg-[#2B1515] text-white p-3 border-b-2 border-red-500";
+
+      document.getElementById('confirmFotoPreview').src = p.foto_url;
+      document.getElementById('confirmNombre').innerText = `${p.grado_abreviado} ${p.apellidos}, ${p.nombres}`;
+      document.getElementById('confirmCIP').innerText = p.cip;
+      document.getElementById('confirmDNI').innerText = p.dni;
+
+      const badge = document.getElementById('confirmListaBadge');
+      badge.innerText = esVerde ? "LISTA VERDE (AUTORIZADO)" : "LISTA NEGRA (DENEGADO / DEFCON 1)";
+      badge.className = esVerde
+        ? "inline-block text-[9px] px-2 py-0.5 rounded font-bold uppercase mt-1 bg-emerald-950 text-emerald-300 border border-emerald-500/50"
+        : "inline-block text-[9px] px-2 py-0.5 rounded font-bold uppercase mt-1 bg-red-950 text-red-300 border border-red-500/50";
+
+      document.getElementById('modalConfirmacionEnrolado').classList.remove('hidden');
+    }
+
+    function cerrarModalConfirmacion() {
+      document.getElementById('modalConfirmacionEnrolado').classList.add('hidden');
+    }
+
+    function validarPersonalRecienEnrolado() {
+      cerrarModalConfirmacion();
+      cambiarModulo('facial');
+      ejecutarEscaneoFacial();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Motor Facial
+      const hudCanvas = document.getElementById('hudCanvas');
+      const statusLabel = document.getElementById('indicadorEstadoFacial');
+      facialEngine = new FacialLivenessEngine(hudCanvas, statusLabel, (statusText, colorKey) => {
+        soundSynth.playBeep(colorKey === 'green' ? 880 : colorKey === 'red' ? 220 : 600, 0.05);
+      });
+      facialEngine.renderTacticalHUD(0, perfilSeleccionado);
+
+      // 2. Motor Dactilar
+      const canvasFP = document.getElementById('canvasFingerprint');
+      fingerprintEngine = new BiometricFingerprintEngine(canvasFP, (statusText, colorKey, progress) => {
+        const estadoElem = document.getElementById('estadoSensorDactilar');
+        const barElem = document.getElementById('dactilarProgressBar');
+        const pctElem = document.getElementById('dactilarProgresoPct');
+        if (estadoElem) estadoElem.innerText = statusText;
+        if (barElem) barElem.style.width = progress + '%';
+        if (pctElem) pctElem.innerText = progress + '%';
+        soundSynth.playLaserScan();
+      });
+      fingerprintEngine.drawFingerprint(0, null);
+
+      // 3. Motor de Voz
+      voiceEngine = new MilitaryVoiceSTTEngine((raw, enriched, isFinal) => {
+        const txtArea = document.getElementById('textoTranscritoVoz');
+        const depElem = document.getElementById('dependenciaNormalizadaVoz');
+        const visitaDest = document.getElementById('visitaDestino');
+        if (txtArea) txtArea.value = raw;
+        if (depElem) depElem.innerText = enriched;
+        if (isFinal && visitaDest) visitaDest.value = enriched;
+      }, (stateText, isListening) => {
+        const estadoMic = document.getElementById('estadoMicrofonoText');
+        const wave = document.getElementById('micPulseWave');
+        if (estadoMic) estadoMic.innerText = stateText;
+        if (wave) wave.classList.toggle('hidden', !isListening);
+      });
+
+      // Cargar perfil inicial en pantalla
+      renderizarBarraPerfiles();
+      aplicarPerfilEnPantalla(perfilSeleccionado);
+    });
+
+    // Cambiar Perfil Militar de Prueba
+    function seleccionarPerfilMilitar(id) {
+      soundSynth.playBeep(750, 0.06);
+      const target = dbService.personnel.find(p => p.id === id);
+      if (!target) return;
+      perfilSeleccionado = target;
+      renderizarBarraPerfiles();
+
+      // Actualizar botÃ³n activo
+      document.querySelectorAll('.btn-perfil').forEach(btn => {
+        const isThis = btn.dataset.cip === target.cip;
+        btn.classList.toggle('bg-[#3B441F]', isThis);
+        btn.classList.toggle('text-white', isThis);
+      });
+
+      // Actualizar visor e imagen
+      const imgTarget = document.getElementById('imgObjetivoFacial');
+      if (imgTarget) imgTarget.src = target.foto_url;
+
+      aplicarPerfilEnPantalla(target);
+      facialEngine.renderTacticalHUD(0, target);
+    }
+
+    // Reflejar datos del perfil seleccionado en cards de estados
+    function aplicarPerfilEnPantalla(p) {
+      const isAuth = p.estado_autorizacion === "AUTORIZADO";
+
+      const cardAuth = document.getElementById('estadoAutorizadoCard');
+      const cardDenegado = document.getElementById('estadoDenegadoCard');
+
+      if (isAuth) {
+        cardAuth.classList.remove('hidden');
+        cardDenegado.classList.add('hidden');
+
+        document.getElementById('authFotoPersonal').src = p.foto_url;
+        document.getElementById('authGradoAbrev').innerText = p.grado_abreviado;
+        document.getElementById('authArma').innerText = p.arma_servicio.toUpperCase();
+        document.getElementById('authApellidosNombres').innerText = `${p.apellidos}, ${p.nombres}`;
+        document.getElementById('authCargo').innerText = p.cargo;
+        document.getElementById('authCIP').innerText = p.cip;
+        document.getElementById('authDNI').innerText = p.dni;
+        document.getElementById('authUnidad').innerText = p.unidad_actual;
+        document.getElementById('authDestino').innerText = p.destino_predeterminado;
+        document.getElementById('authHoraIngreso').innerText = new Date().toLocaleTimeString('es-PE', { hour12: false }) + " -05";
+
+        if (p.porte_arma_reglamentaria && p.porte_arma_reglamentaria.autorizado) {
+          document.getElementById('authArmamento').innerText = `${p.porte_arma_reglamentaria.serie_arma} (${p.porte_arma_reglamentaria.municion_dotacion})`;
+        } else {
+          document.getElementById('authArmamento').innerText = "NO PORTA ARMA";
+        }
+        document.getElementById('authVehiculo').innerText = p.vehiculo_autorizado || "No Registrado";
+      } else {
+        cardAuth.classList.add('hidden');
+        cardDenegado.classList.remove('hidden');
+
+        document.getElementById('deniedFoto').src = p.foto_url;
+        document.getElementById('deniedGrado').innerText = p.grado_abreviado;
+        document.getElementById('deniedNombre').innerText = `${p.apellidos}, ${p.nombres}`;
+        document.getElementById('deniedCIP').innerText = p.cip;
+        document.getElementById('deniedDNI').innerText = p.dni;
+        if (p.motivo_restriccion) {
+          document.getElementById('deniedDescripcion').innerText = p.motivo_restriccion.descripcion;
+        }
+      }
+    }
+
+    // Ejecutar Flujo de Reconocimiento Facial
+    function ejecutarEscaneoFacial() {
+      const btn = document.getElementById('btnEscanearFacial');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      facialEngine.startSimulation(perfilSeleccionado, (resultado) => {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+
+        if (resultado.success) {
+          soundSynth.playSuccess();
+          registrarEnBitacora({
+            cip: resultado.person.cip,
+            nombre: `${resultado.person.grado_abreviado} ${resultado.person.apellidos}`,
+            metodo: 'FACIAL (LIVENESS)',
+            estado: 'AUTORIZADO',
+            destino: resultado.person.destino_predeterminado
+          });
+        } else {
+          soundSynth.playAlert();
+          registrarEnBitacora({
+            cip: resultado.person.cip,
+            nombre: `${resultado.person.grado_abreviado} ${resultado.person.apellidos}`,
+            metodo: 'FACIAL',
+            estado: 'DENEGADO / ALERTA',
+            destino: 'DETENIDO EN PREVENCIÃ“N'
+          });
+        }
+      });
+    }
+
+    // Ejecutar Flujo de Reconocimiento Dactilar
+    function ejecutarEscaneoDactilar() {
+      fingerprintEngine.scanAndMatch(perfilSeleccionado, (resultado) => {
+        if (resultado.success) {
+          soundSynth.playSuccess();
+          registrarEnBitacora({
+            cip: resultado.person.cip,
+            nombre: `${resultado.person.grado_abreviado} ${resultado.person.apellidos}`,
+            metodo: 'DACTILAR (WSQ)',
+            estado: 'AUTORIZADO',
+            destino: resultado.person.destino_predeterminado
+          });
+        } else {
+          soundSynth.playAlert();
+          registrarEnBitacora({
+            cip: resultado.person.cip,
+            nombre: `${resultado.person.grado_abreviado} ${resultado.person.apellidos}`,
+            metodo: 'DACTILAR (AFIS)',
+            estado: 'DENEGADO / ALERTA',
+            destino: 'SALA DE INVESTIGACIÃ“N'
+          });
+        }
+      });
+    }
+
+    // Reiniciar visor
+    function reiniciarFlujoBiometrico() {
+      soundSynth.playBeep(500, 0.05);
+      facialEngine.stop();
+      facialEngine.updateStatus("[SISTEMA REINICIADO - ENCUADRE ROSTRO EN Ã“VALO]", "amber");
+      facialEngine.renderTacticalHUD(0, perfilSeleccionado);
+      fingerprintEngine.drawFingerprint(0, null);
+      document.getElementById('estadoSensorDactilar').innerText = "[ESPERANDO COLOCACIÃ“N DEL DEDO]";
+      document.getElementById('dactilarProgressBar').style.width = '0%';
+      document.getElementById('dactilarProgresoPct').innerText = '0%';
+    }
+
+    // Alternar CÃ¡mara Real (Webcam)
+    async function toggleWebcamReal() {
+      const video = document.getElementById('webcamVideo');
+      const simFace = document.getElementById('simulatedFaceTarget');
+      const btnCamTxt = document.getElementById('txtBtnCam');
+
+      if (streamWebcam) {
+        streamWebcam.getTracks().forEach(track => track.stop());
+        streamWebcam = null;
+        video.classList.add('hidden');
+        simFace.classList.remove('hidden');
+        btnCamTxt.innerText = "Usar CÃ¡mara Web";
+      } else {
+        try {
+          streamWebcam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+          video.srcObject = streamWebcam;
+          video.classList.remove('hidden');
+          simFace.classList.add('hidden');
+          btnCamTxt.innerText = "Usar SimulaciÃ³n";
+          soundSynth.playBeep(880, 0.1);
+        } catch (err) {
+          alert("No se pudo acceder a la cÃ¡mara o no cuenta con permisos. Se mantiene la simulaciÃ³n tÃ¡ctica.");
+          console.warn(err);
+        }
+      }
+    }
+
+    // PestaÃ±as de MÃ³dulos
+    function cambiarModulo(modulo) {
+      soundSynth.playBeep(650, 0.04);
+      ['Facial', 'Dactilar', 'Voz'].forEach(m => {
+        const modElem = document.getElementById('modulo' + m);
+        const tabBtn = document.getElementById('tabBtn' + m);
+        const activo = m.toLowerCase() === modulo;
+
+        modElem.classList.toggle('hidden', !activo);
+        tabBtn.classList.toggle('bg-[#4B5320]', activo);
+        tabBtn.classList.toggle('text-amber-300', activo);
+        tabBtn.classList.toggle('text-gray-300', !activo);
+      });
+    }
+
+    // Manejo de Voz
+    function toggleReconocimientoVoz() {
+      soundSynth.playBeep(800, 0.08);
+      if (voiceEngine.isListening) {
+        voiceEngine.stopListening();
+      } else {
+        voiceEngine.startListening();
+      }
+    }
+
+    function simularFraseVoz(frase) {
+      soundSynth.playBeep(700, 0.05);
+      voiceEngine.simulateSpeechPreset(frase);
+    }
+
+    function limpiarVoz() {
+      document.getElementById('textoTranscritoVoz').value = '';
+      document.getElementById('dependenciaNormalizadaVoz').innerText = '-';
+    }
+
+    function confirmarRegistroPorVoz() {
+      const transcrito = document.getElementById('textoTranscritoVoz').value.trim();
+      const depNormalizada = document.getElementById('dependenciaNormalizadaVoz').innerText;
+      if (!transcrito) {
+        alert("Por favor dicte o escriba la dependencia de destino.");
+        return;
+      }
+      soundSynth.playSuccess();
+      document.getElementById('visitaDestino').value = depNormalizada !== '-' ? depNormalizada : transcrito;
+      document.getElementById('visitaMotivo').value = "Visita autorizada por comando de voz";
+      alert("âœ“ Destino confirmado y transferido al formulario de Visita Externa.");
+    }
+
+    // Formulario de Visita Externa
+    function autollenarVisitaEjemplo() {
+      soundSynth.playBeep(600, 0.05);
+      document.getElementById('visitaNumDoc').value = "44719283";
+      document.getElementById('visitaNombres').value = "ALVAREZ ROJAS, Fernando MartÃ­n";
+      document.getElementById('visitaEntidad').value = "Ministerio de Defensa (MINDEF)";
+      document.getElementById('visitaOficial').value = "CRL EP Mario CÃ¡rdenas";
+      document.getElementById('visitaDestino').value = "DirecciÃ³n de Inteligencia del EjÃ©rcito (DINTE)";
+      document.getElementById('visitaMotivo').value = "ReuniÃ³n tÃ©cnica de coordinaciÃ³n DITE-MINDEF";
+    }
+
+    function consultarRENIEC() {
+      soundSynth.playBeep(900, 0.05);
+      autollenarVisitaEjemplo();
+    }
+
+    function registrarPaseVisita(e) {
+      e.preventDefault();
+      soundSynth.playSuccess();
+      const dni = document.getElementById('visitaNumDoc').value;
+      const nom = document.getElementById('visitaNombres').value;
+      const dest = document.getElementById('visitaDestino').value;
+
+      registrarEnBitacora({
+        cip: dni,
+        nombre: nom + " (CIVIL)",
+        metodo: 'VOZ / DNI',
+        estado: 'PASE EMITIDO',
+        destino: dest
+      });
+
+      alert(`PASE DE VISITA GENERADO CON Ã‰XITO\nPase: VIS-2026-${Math.floor(1000 + Math.random() * 9000)}\nVisitante: ${nom}\nDestino: ${dest}\nValidez: 4 horas.`);
+    }
+
+    // Modal de Alerta
+    function notificarOficialGuardia() {
+      soundSynth.playAlert();
+      document.getElementById('modalIntervenidoNombre').innerText = `${perfilSeleccionado.apellidos}, ${perfilSeleccionado.nombres}`;
+      document.getElementById('modalIntervenidoCIP').innerText = perfilSeleccionado.cip;
+      document.getElementById('modalOficialGuardia').classList.remove('hidden');
+    }
+
+    function cerrarModalGuardia() {
+      document.getElementById('modalOficialGuardia').classList.add('hidden');
+    }
+
+    function confirmarDespachoPM() {
+      soundSynth.playBeep(440, 0.3, 'square');
+      alert("PATRULLA PM 501 DESPACHADA A PREVENCIÃ“N PRINCIPAL.\nOficial de Guardia notificado vÃ­a frecuencia tÃ¡ctica.");
+      cerrarModalGuardia();
+    }
+
+    // Registrar en BitÃ¡cora
+    function registrarEnBitacora(item) {
+      const log = dbService.logAccess(item);
+      const tabla = document.getElementById('tablaBitacoraAccesos');
+      const fila = document.createElement('tr');
+      const isOk = item.estado.includes('AUTORIZADO') || item.estado.includes('PASE');
+
+      fila.innerHTML = `
+        <td class="py-1 px-2 text-gray-300">${log.timestamp}</td>
+        <td class="py-1 px-2 font-bold text-white">${item.cip}</td>
+        <td class="py-1 px-2">${item.nombre}</td>
+        <td class="py-1 px-2 text-amber-300">${item.metodo}</td>
+        <td class="py-1 px-2">
+          <span class="px-1.5 py-0.2 ${isOk ? 'bg-green-900/60 text-green-300' : 'bg-red-900/60 text-red-300'} rounded font-bold">
+            ${item.estado}
+          </span>
+        </td>
+        <td class="py-1 px-2 text-gray-300 truncate max-w-xs">${item.destino}</td>
+      `;
+      tabla.insertBefore(fila, tabla.firstChild);
+    }
+
+    // Alternar Layout Smartphone vs Tablet
+    function cambiarLayoutDispositivo(modo) {
+      soundSynth.playBeep(800, 0.05);
+      const container = document.getElementById('appContainer');
+      const btnSmart = document.getElementById('btnModoSmart');
+      const btnTablet = document.getElementById('btnModoTablet');
+
+      if (modo === 'smartphone') {
+        container.style.maxWidth = '440px';
+        btnSmart.classList.add('bg-[#4B5320]', 'text-white');
+        btnSmart.classList.remove('text-gray-300');
+        btnTablet.classList.remove('bg-[#4B5320]', 'text-white');
+        btnTablet.classList.add('text-gray-300');
+      } else {
+        container.style.maxWidth = '1280px';
+        btnTablet.classList.add('bg-[#4B5320]', 'text-white');
+        btnTablet.classList.remove('text-gray-300');
+        btnSmart.classList.remove('bg-[#4B5320]', 'text-white');
+        btnSmart.classList.add('text-gray-300');
+      }
+    }
+    // Manejo de Modal QR de Acceso
+    function abrirModalQR() {
+      soundSynth.playBeep(700, 0.05);
+      document.getElementById('modalQRAcceso').classList.remove('hidden');
+    }
+
+    function cerrarModalQR() {
+      document.getElementById('modalQRAcceso').classList.add('hidden');
+    }
+
+    function copiarLinkAcceso() {
+      const url = "https://ejercito-peru-control-tw6c6qr21q.brewpage.app/";
+      navigator.clipboard.writeText(url).then(() => {
+        soundSynth.playSuccess();
+        const btnTxt = document.getElementById('btnCopiarTexto');
+        btnTxt.innerText = "¡Copiado!";
+        setTimeout(() => { btnTxt.innerText = "Copiar Enlace"; }, 2000);
+      }).catch(() => {
+        prompt("Copie este enlace para compartir:", url);
+      });
+    }
+  </script>
+</body>
+
+</html>
